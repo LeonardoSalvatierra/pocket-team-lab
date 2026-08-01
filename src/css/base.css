@@ -1,62 +1,62 @@
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html {
-    color-scheme: dark;
-    scroll-behavior: smooth;
+  color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
-    min-width: 320px;
-    margin: 0;
-    background: var(--color-background);
-    color: var(--color-text);
-    font-family: var(--font-family);
+  min-width: 320px;
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family);
 }
 
 img {
-    display: block;
-    max-width: 100%;
+  display: block;
+  max-width: 100%;
 }
 
 button,
 input,
 select {
-    font: inherit;
+  font: inherit;
 }
 
 button,
 a {
-    -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
-    color: inherit;
-    text-decoration: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 button {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 main {
-    min-height: calc(100vh - var(--header-height));
+  min-height: calc(100vh - var(--header-height));
 }
 
 .page-container {
-    width: min(100% - 2rem, var(--page-width));
-    margin-inline: auto;
-    padding-block: var(--space-xl);
+  width: min(100% - 2rem, var(--page-width));
+  margin-inline: auto;
+  padding-block: var(--space-xl);
 }
 
 .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

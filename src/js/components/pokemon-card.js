@@ -1,34 +1,29 @@
-import {
-    capitalize,
-    formatPokemonNumber
-} from "../utils.js";
+import { capitalize, formatPokemonNumber } from "../utils.js";
 // Finds and returns one statistic from a Pokémon object.
 function getStat(pokemon, statName) {
-    const statistic = pokemon.stats.find(
-        (item) => item.stat.name === statName
-    );
+  const statistic = pokemon.stats.find((item) => item.stat.name === statName);
 
-    return statistic?.base_stat ?? 0;
+  return statistic?.base_stat ?? 0;
 }
 // Creates the complete HTML card for one Pokémon.
 export function createPokemonCard(pokemon) {
-    const article = document.createElement("article");
-    article.classList.add("pokemon-card");
+  const article = document.createElement("article");
+  article.classList.add("pokemon-card");
 
-    const image =
-        pokemon.sprites.other["official-artwork"].front_default ||
-        pokemon.sprites.front_default;
+  const image =
+    pokemon.sprites.other["official-artwork"].front_default ||
+    pokemon.sprites.front_default;
 
-    const types = pokemon.types
-        .map(
-            ({ type }) =>
-                `<span class="pokemon-type pokemon-type--${type.name}">
+  const types = pokemon.types
+    .map(
+      ({ type }) =>
+        `<span class="pokemon-type pokemon-type--${type.name}">
           ${type.name}
-        </span>`
-        )
-        .join("");
+        </span>`,
+    )
+    .join("");
 
-    article.innerHTML = `
+  article.innerHTML = `
     <button
       class="favorite-button"
       type="button"
@@ -91,5 +86,5 @@ export function createPokemonCard(pokemon) {
     </div>
   `;
 
-    return article;
+  return article;
 }

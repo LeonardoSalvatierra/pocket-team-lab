@@ -1,29 +1,29 @@
 import { loadLayout } from "../components/layout.js";
 import { getPokemon } from "../services/pokemon-api-service.js";
 import {
-    capitalize,
-    formatPokemonNumber,
-    getQueryParameter,
-    showError
+  capitalize,
+  formatPokemonNumber,
+  getQueryParameter,
+  showError,
 } from "../utils.js";
 // Gets the selected Pokémon ID and displays its details.
 async function renderPokemonDetails() {
-    const container = document.querySelector("#pokemon-details");
-    const pokemonId = getQueryParameter("id");
+  const container = document.querySelector("#pokemon-details");
+  const pokemonId = getQueryParameter("id");
 
-    if (!pokemonId) {
-        showError(container, "No Pokémon was selected.");
-        return;
-    }
+  if (!pokemonId) {
+    showError(container, "No Pokémon was selected.");
+    return;
+  }
 
-    try {
-        const pokemon = await getPokemon(pokemonId);
+  try {
+    const pokemon = await getPokemon(pokemonId);
 
-        const image =
-            pokemon.sprites.other["official-artwork"].front_default ||
-            pokemon.sprites.front_default;
+    const image =
+      pokemon.sprites.other["official-artwork"].front_default ||
+      pokemon.sprites.front_default;
 
-        container.innerHTML = `
+    container.innerHTML = `
       <article class="pokemon-detail">
         <img
           src="${image}"
@@ -45,19 +45,15 @@ async function renderPokemonDetails() {
       </article>
     `;
 
-        document.title =
-            `${capitalize(pokemon.name)} | Pocket Team Lab`;
-    } catch (error) {
-        console.error(error);
+    document.title = `${capitalize(pokemon.name)} | Pocket Team Lab`;
+  } catch (error) {
+    console.error(error);
 
-        showError(
-            container,
-            "The Pokémon information could not be loaded."
-        );
-    }
+    showError(container, "The Pokémon information could not be loaded.");
+  }
 }
 // Loads the shared layout and starts the details page.
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadLayout();
-    await renderPokemonDetails();
+  await loadLayout();
+  await renderPokemonDetails();
 });

@@ -1,15 +1,22 @@
 {
-    "name": "pocket-team-lab",
-    "version": "1.0.0",
-    "private": true,
-    "type": "module",
-    "description": "A Pokemon explorer and team builder application.",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
-    },
-    "devDependencies": {
-        "vite": "^8.2.0"
-    }
+  "name": "pocket-team-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A Pokemon explorer and team builder application.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
+    "prettier": "^3.9.6",
+    "vite": "^8.2.0"
+  }
 }

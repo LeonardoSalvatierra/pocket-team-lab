@@ -1,112 +1,112 @@
 @media (max-width: 1100px) {
-    .explorer__layout {
-        grid-template-columns: 210px minmax(0, 1fr);
-    }
+  .explorer__layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
 
-    .current-team {
-        display: none;
-    }
+  .current-team {
+    display: none;
+  }
 
-    .pokemon-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .pokemon-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
-    body {
-        padding-bottom: 70px;
-    }
+  body {
+    padding-bottom: 70px;
+  }
 
-    .site-header__content {
-        min-height: 56px;
-    }
+  .site-header__content {
+    min-height: 56px;
+  }
 
-    .desktop-navigation,
-    .team-counter {
-        display: none;
-    }
+  .desktop-navigation,
+  .team-counter {
+    display: none;
+  }
 
-    .brand__name {
-        font-size: 0.9rem;
-    }
+  .brand__name {
+    font-size: 0.9rem;
+  }
 
-    .pokeball-logo {
-        width: 26px;
-        height: 26px;
-    }
+  .pokeball-logo {
+    width: 26px;
+    height: 26px;
+  }
 
-    .hero {
-        padding-block: var(--space-xl);
-        align-items: flex-start;
-        flex-direction: column;
-    }
+  .hero {
+    padding-block: var(--space-xl);
+    align-items: flex-start;
+    flex-direction: column;
+  }
 
-    .hero__actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
+  .hero__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 
-    .hero h1 {
-        font-size: clamp(2rem, 11vw, 3.2rem);
-    }
+  .hero h1 {
+    font-size: clamp(2rem, 11vw, 3.2rem);
+  }
 
-    .explorer__layout {
-        display: block;
-    }
+  .explorer__layout {
+    display: block;
+  }
 
-    .filters-panel {
-        display: none;
-    }
+  .filters-panel {
+    display: none;
+  }
 
-    .results-toolbar {
-        align-items: stretch;
-        flex-direction: column;
-    }
+  .results-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
 
-    .pokemon-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.65rem;
-    }
+  .pokemon-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
 
-    .pokemon-card__image {
-        height: 150px;
-        padding: var(--space-md);
-    }
+  .pokemon-card__image {
+    height: 150px;
+    padding: var(--space-md);
+  }
 
-    .pokemon-card__actions {
-        grid-template-columns: 1fr;
-    }
+  .pokemon-card__actions {
+    grid-template-columns: 1fr;
+  }
 
-    .mobile-navigation {
-        position: fixed;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 200;
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        min-height: 66px;
-        border-top: 1px solid var(--color-border);
-        background: #101522;
-    }
+  .mobile-navigation {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 200;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    min-height: 66px;
+    border-top: 1px solid var(--color-border);
+    background: #101522;
+  }
 
-    .mobile-navigation a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.2rem;
-        flex-direction: column;
-        color: var(--color-text-muted);
-        font-size: 0.68rem;
-    }
+  .mobile-navigation a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    flex-direction: column;
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+  }
 
-    .site-footer {
-        display: none;
-    }
+  .site-footer {
+    display: none;
+  }
 }
 
 @media (max-width: 380px) {
-    .pokemon-grid {
-        grid-template-columns: 1fr;
-    }
+  .pokemon-grid {
+    grid-template-columns: 1fr;
+  }
 }
