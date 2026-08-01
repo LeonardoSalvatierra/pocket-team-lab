@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore Pokémon, compare their stats, and build a team.">
+
+    <title>Pocket Team Lab</title>
+
+    <link rel="icon" href="/images/favicon.svg">
+    <link rel="stylesheet" href="/src/css/styles.css">
+    <link rel="stylesheet" href="/src/css/pages/home.css">
+    <link rel="stylesheet" href="/src/css/responsive.css">
+</head>
+
+<body>
+    <div id="site-header"></div>
+
+    <main>
+        <section class="hero">
+            <div class="hero__content">
+                <div class="hero__badges">
+                    <span class="badge badge--red">1,025 Pokémon</span>
+                    <span class="badge badge--blue">9 Generations</span>
+                </div>
+
+                <h1>
+                    Discover. Compare.
+                    <span>Build your team.</span>
+                </h1>
+
+                <p>
+                    Explore Pokémon, check their stats, save favorites,
+                    and create your own team.
+                </p>
+            </div>
+
+            <div class="hero__actions">
+                <a class="button button--primary" data-route="">
+                    Explore Pokémon
+                </a>
+
+                <a class="button button--secondary" data-route="team-builder/team-builder.html">
+                    Build a Team
+                </a>
+            </div>
+        </section>
+
+        <section class="explorer" aria-labelledby="explorer-title">
+            <h2 id="explorer-title" class="visually-hidden">
+                Pokémon Explorer
+            </h2>
+
+            <label class="search-bar">
+                <span aria-hidden="true">⌕</span>
+
+                <input id="pokemon-search" type="search" placeholder="Search by name or number...">
+            </label>
+
+            <div class="explorer__layout">
+                <aside class="panel filters-panel">
+                    <div class="panel__heading">
+                        <h2>Filters</h2>
+                        <button id="reset-filters" class="text-button" type="button">
+                            Reset
+                        </button>
+                    </div>
+
+                    <p class="placeholder-text">
+                        Type, generation, weakness, and ability filters
+                        will appear here.
+                    </p>
+                </aside>
+
+                <section class="pokemon-results">
+                    <div class="results-toolbar">
+                        <p>
+                            <span id="result-count">0</span>
+                            Pokémon shown
+                        </p>
+
+                        <select id="sort-select" aria-label="Sort Pokémon">
+                            <option value="number">Sort by number</option>
+                            <option value="name">Sort by name</option>
+                            <option value="hp">Sort by HP</option>
+                        </select>
+                    </div>
+
+                    <div id="pokemon-grid" class="pokemon-grid" aria-live="polite">
+                        <p class="loading-message">Loading Pokémon...</p>
+                    </div>
+                    <div class="pagination">
+                        <button id="previous-page" class="button button--secondary" type="button" disabled>
+                            ← Previous
+                        </button>
+                    
+                        <span id="page-indicator">Page 1</span>
+                    
+                        <button id="next-page" class="button button--secondary" type="button">
+                            Next →
+                        </button>
+                    </div>
+                </section>
+
+                <aside class="panel current-team">
+                    <div class="panel__heading">
+                        <h2>Current Team</h2>
+                        <span id="team-count">0 / 6</span>
+                    </div>
+
+                    <div id="current-team-list">
+                        <p class="placeholder-text">
+                            Pokémon added to the current team will appear here.
+                        </p>
+                    </div>
+
+                    <a class="button button--secondary button--full" data-route="team-builder/team-builder.html">
+                        Open Team Builder
+                    </a>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="/src/js/main.js"></script>
+</body>
+
+</html>

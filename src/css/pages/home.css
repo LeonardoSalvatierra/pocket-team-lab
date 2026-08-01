@@ -1,0 +1,309 @@
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xl);
+    width: min(100% - 2rem, var(--page-width));
+    margin-inline: auto;
+    padding-block: var(--space-xxl);
+}
+
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
+
+.hero__content {
+    max-width: 720px;
+}
+
+.hero__badges {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.hero h1 {
+    max-width: 650px;
+    margin: 0;
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    line-height: 0.98;
+}
+
+.hero h1 span {
+    display: block;
+    color: var(--color-primary);
+}
+
+.hero p {
+    max-width: 600px;
+    margin-block: var(--space-lg);
+    color: var(--color-text-soft);
+    line-height: 1.6;
+}
+
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.explorer {
+    width: min(100% - 2rem, var(--page-width));
+    margin-inline: auto;
+    padding-bottom: var(--space-xxl);
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    padding-inline: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    background: var(--color-surface);
+}
+
+.search-bar input {
+    width: 100%;
+    min-height: 54px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+}
+
+.explorer__layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 280px;
+    gap: var(--space-lg);
+    align-items: start;
+}
+
+.results-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+    color: var(--color-text-muted);
+}
+
+.results-toolbar select {
+    padding: 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.pokemon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-md);
+}
+
+.pokemon-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large);
+    background: var(--color-surface);
+}
+
+.pokemon-card__image {
+    width: 100%;
+    height: 210px;
+    padding: var(--space-lg);
+    object-fit: contain;
+    background: var(--color-surface-light);
+}
+
+.pokemon-card__content {
+    padding: var(--space-md);
+}
+
+.pokemon-card__heading {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+}
+
+.pokemon-card__heading span {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+}
+
+.pokemon-card__heading h3 {
+    margin: 0;
+}
+
+.favorite-button {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    z-index: 2;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+}
+
+.favorite-button--active {
+    color: var(--color-primary);
+}
+
+.pokemon-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-block: var(--space-sm);
+}
+
+.pokemon-type {
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: var(--color-border);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.pokemon-type--fire {
+    background: rgba(255, 65, 75, 0.2);
+    color: #ff5a63;
+}
+
+.pokemon-type--water {
+    background: rgba(66, 117, 255, 0.2);
+    color: #6390ff;
+}
+
+.pokemon-type--grass {
+    background: rgba(32, 200, 117, 0.2);
+    color: var(--color-green);
+}
+
+.pokemon-stats {
+    margin-block: var(--space-md);
+}
+
+.pokemon-stats div {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    margin-bottom: 0.3rem;
+}
+
+.pokemon-stats dt {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.pokemon-stats dd {
+    margin: 0;
+}
+
+.pokemon-card__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xs);
+}
+
+.card-button {
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: transparent;
+    color: var(--color-text-soft);
+    font-size: 0.8rem;
+}
+
+.card-button--primary {
+    border-color: rgba(255, 65, 75, 0.4);
+    color: var(--color-primary);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+}
+
+.pagination span {
+    color: var(--color-text-soft);
+}
+
+.pagination button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    transform: none;
+}
+
+/* Current team preview */
+
+#current-team-list {
+    display: grid;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.team-preview {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 30px;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    background: var(--color-surface-light);
+}
+
+.team-preview img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.team-preview span {
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team-preview__remove {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.team-preview__remove:hover {
+    background: rgba(255, 65, 75, 0.15);
+    color: var(--color-primary);
+}
+
+.team-preview__remove:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
