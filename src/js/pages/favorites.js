@@ -1,8 +1,12 @@
 import { loadLayout } from "../components/layout.js";
 
+import { createTcgCard } from "../components/tcg-card.js";
+
 import {
+  getFavoriteCards,
   getFavoritePokemon,
   removeFavoritePokemon,
+  toggleFavoriteCard,
 } from "../services/favorite-service.js";
 
 import { getPokemon } from "../services/pokemon-api-service.js";
@@ -13,11 +17,14 @@ import {
   maximumTeamSize,
 } from "../services/team-service.js";
 
-import { getStorage, storageKeys } from "../storage/storage.js";
-
-import { capitalize, formatPokemonNumber } from "../utils.js";
+import {
+  capitalize,
+  formatPokemonNumber,
+  getCardMarketPrice,
+} from "../utils.js";
 
 let favoritePokemonDetails = [];
+let favoriteCardItems = [];
 
 // Gets the preferred Pokémon image.
 function getPokemonImage(pokemon) {
@@ -173,7 +180,7 @@ function renderFavoritePokemon() {
 
 // Updates favorite counters.
 function updateFavoriteCounters() {
-  const favoriteCards = getStorage(storageKeys.favoriteCards, []);
+  const favoriteCards = getFavoriteCards();
 
   document.querySelector("#favorite-pokemon-count").textContent =
     favoritePokemonDetails.length;
@@ -280,7 +287,42 @@ function changeFavoritesTab(tabName) {
 // Connects Favorites page controls.
 function addFavoritesListeners() {
   const container = document.querySelector("#favorite-pokemon-content");
+  const favoriteCardsContainer = document.querySelector(
+    "#favorite-cards-content",
+  );
 
+  document
+    .querySelector("#favorite-card-search")
+    .addEventListener("input", renderFavoriteCards);
+
+  document
+    .querySelector("#favorite-card-sort")
+    .addEventListener("change", renderFavoriteCards);
+
+  favoriteCardsContainer.addEventListener("click", (event) => {
+    const favoriteButton = event.target.closest("[data-card-favorite]");
+
+    if (!favoriteButton) {
+      return;
+    }
+
+    const cardId = favoriteButton.dataset.cardFavorite;
+
+    const card = favoriteCardItems.find((item) => item.id === cardId);
+
+    if (!card) {
+      return;
+    }
+
+    toggleFavoriteCard(card);
+
+    favoriteCardItems = favoriteCardItems.filter((item) => item.id !== cardId);
+
+    updateFavoriteCounters();
+    renderFavoriteCards();
+
+    showFavoritesMessage(`${card.name} was removed from favorites.`);
+  });
   document
     .querySelector("#favorite-search")
     .addEventListener("input", renderFavoritePokemon);
@@ -319,5 +361,114 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadLayout();
 
   addFavoritesListeners();
+  loadFavoriteCards();
   await loadFavoritePokemon();
 });
+
+// Normalizes cards saved before the latest update.
+function normalizeFavoriteCard(card) {
+  return {
+    ...card,
+    supertype: card.supertype ?? "Card",
+    subtypes: card.subtypes ?? [],
+    images: card.images ?? {
+      small: card.image ?? "",
+      large: card.largeImage ?? card.image ?? "",
+    },
+    set: card.set ?? {
+      id: "",
+      name: "Unknown set",
+      releaseDate: "",
+    },
+  };
+}
+
+// Displays favorite trading cards.
+function renderFavoriteCards() {
+  const container = document.querySelector("#favorite-cards-content");
+
+  const searchValue = document
+    .querySelector("#favorite-card-search")
+    .value.trim()
+    .toLowerCase();
+
+  const sortValue = document.querySelector("#favorite-card-sort").value;
+
+  let cards = favoriteCardItems.filter(
+    (card) =>
+      card.name.toLowerCase().includes(searchValue) ||
+      card.id.toLowerCase().includes(searchValue),
+  );
+
+  cards = [...cards].sort((first, second) => {
+    if (sortValue === "newest") {
+      return second.set.releaseDate.localeCompare(first.set.releaseDate);
+    }
+
+    if (sortValue === "rarity") {
+      return (first.rarity ?? "").localeCompare(second.rarity ?? "");
+    }
+
+    if (sortValue === "price-high" || sortValue === "price-low") {
+      const firstPrice = getCardMarketPrice(first);
+
+      const secondPrice = getCardMarketPrice(second);
+
+      if (firstPrice === null) {
+        return 1;
+      }
+
+      if (secondPrice === null) {
+        return -1;
+      }
+
+      return sortValue === "price-high"
+        ? secondPrice - firstPrice
+        : firstPrice - secondPrice;
+    }
+
+    return first.name.localeCompare(second.name);
+  });
+
+  if (cards.length === 0) {
+    container.innerHTML = `
+      <div class="favorites-empty">
+        <span aria-hidden="true">◇</span>
+
+        <h2>
+          ${
+            favoriteCardItems.length > 0
+              ? "No matching cards"
+              : "No favorite cards yet"
+          }
+        </h2>
+
+        <p>
+          Save cards from the Trading Cards page.
+        </p>
+
+        <a
+          class="button button--primary"
+          href="${import.meta.env.BASE_URL}cards/cards.html"
+        >
+          Explore Trading Cards
+        </a>
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = "";
+
+  cards.forEach((card) => {
+    container.appendChild(createTcgCard(card));
+  });
+}
+
+// Loads locally saved favorite cards.
+function loadFavoriteCards() {
+  favoriteCardItems = getFavoriteCards().map(normalizeFavoriteCard);
+
+  renderFavoriteCards();
+}

@@ -14,7 +14,7 @@
 
     <link rel="icon" href="/images/favicon.svg" />
     <link rel="stylesheet" href="/src/css/styles.css" />
-
+    <link rel="stylesheet" href="/src/css/pages/cards.css" />
     <link rel="stylesheet" href="/src/css/pages/favorites.css" />
 
     <link rel="stylesheet" href="/src/css/responsive.css" />
@@ -95,20 +95,35 @@
       </section>
 
       <section id="favorite-cards-section" class="favorites-section" hidden>
-        <div class="favorites-empty">
-          <span aria-hidden="true">◇</span>
+        <div class="favorites-toolbar">
+          <label class="favorites-search">
+            <span aria-hidden="true">⌕</span>
 
-          <h2>Trading card favorites</h2>
+            <input
+              id="favorite-card-search"
+              type="search"
+              placeholder="Search favorite cards..."
+            />
+          </label>
 
-          <p>
-            Favorite trading cards will appear here after the Trading Cards page
-            is completed.
-          </p>
+          <select id="favorite-card-sort" aria-label="Sort favorite cards">
+            <option value="name">Sort by name</option>
 
-          <a class="button button--secondary" data-route="cards/cards.html">
-            Open Trading Cards
-          </a>
+            <option value="newest">Newest sets</option>
+
+            <option value="rarity">Sort by rarity</option>
+
+            <option value="price-high">Price: high to low</option>
+
+            <option value="price-low">Price: low to high</option>
+          </select>
         </div>
+
+        <div
+          id="favorite-cards-content"
+          class="tcg-card-grid"
+          aria-live="polite"
+        ></div>
       </section>
     </main>
 

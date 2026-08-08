@@ -27,3 +27,28 @@ export function showError(container, message) {
     </div>
   `;
 }
+// Finds the lowest available market price for one card.
+export function getCardMarketPrice(card) {
+  if (typeof card.marketPrice === "number") {
+    return card.marketPrice;
+  }
+
+  const priceGroups = Object.values(card.tcgplayer?.prices ?? {});
+
+  const availablePrices = priceGroups
+    .map((prices) => prices.market ?? prices.mid ?? prices.low ?? null)
+    .filter((price) => typeof price === "number");
+
+  if (availablePrices.length === 0) {
+    return null;
+  }
+
+  return Math.min(...availablePrices);
+}
+
+// Formats a card price or returns a fallback.
+export function formatCardPrice(card) {
+  const price = getCardMarketPrice(card);
+
+  return price === null ? "Not available" : `From $${price.toFixed(2)}`;
+}

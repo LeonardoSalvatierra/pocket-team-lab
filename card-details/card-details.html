@@ -2,32 +2,44 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <meta
       name="description"
-      content="View detailed information about a Pokémon card."
+      content="View detailed information about a Pokémon trading card."
     />
 
     <title>Card Details | Pocket Team Lab</title>
 
     <link rel="icon" href="/images/favicon.svg" />
+
     <link rel="stylesheet" href="/src/css/styles.css" />
-    <link rel="stylesheet" href="/src/css/pages/cards.css" />
+    <link rel="stylesheet" href="/src/css/pages/card-details.css" />
     <link rel="stylesheet" href="/src/css/responsive.css" />
   </head>
 
   <body>
     <div id="site-header"></div>
 
-    <main class="page-container">
-      <section id="card-details">
-        <p>Loading card information...</p>
+    <main class="page-container card-details-page">
+      <nav class="card-details-navigation" aria-label="Card navigation">
+        <a href="/cards/cards.html">← Back to Trading Cards</a>
+
+        <a href="/favorites/favorites.html">View Favorites</a>
+      </nav>
+
+      <section id="card-details" aria-live="polite">
+        <div class="card-details-loading">
+          <span class="card-details-loading__spinner" aria-hidden="true"></span>
+
+          <p>Loading card information...</p>
+        </div>
       </section>
     </main>
 
     <div id="site-footer"></div>
 
-    <script type="module" src="/src/js/pages/cards.js"></script>
+    <script type="module" src="/src/js/pages/card-details.js"></script>
   </body>
 </html>

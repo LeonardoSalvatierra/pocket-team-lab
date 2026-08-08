@@ -2,31 +2,170 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <meta
       name="description"
-      content="Search and explore Pokémon trading cards."
+      content="Search, filter, and save Pokémon trading cards."
     />
 
     <title>Trading Cards | Pocket Team Lab</title>
 
     <link rel="icon" href="/images/favicon.svg" />
     <link rel="stylesheet" href="/src/css/styles.css" />
+
     <link rel="stylesheet" href="/src/css/pages/cards.css" />
+
     <link rel="stylesheet" href="/src/css/responsive.css" />
   </head>
 
   <body>
     <div id="site-header"></div>
 
-    <main class="page-container">
-      <h1>Trading Cards</h1>
-      <p>Search and explore Pokémon trading cards.</p>
+    <main class="page-container cards-page">
+      <header class="cards-header">
+        <div>
+          <p class="cards-header__eyebrow">Pokémon TCG</p>
 
-      <section id="cards-content" class="panel">
-        <p>This section is under construction.</p>
-      </section>
+          <h1>Trading Cards</h1>
+
+          <p>
+            Discover Pokémon cards from different sets, generations, and
+            rarities.
+          </p>
+        </div>
+
+        <a
+          class="button button--secondary"
+          data-route="favorites/favorites.html"
+        >
+          View Favorites
+        </a>
+      </header>
+
+      <label class="card-search">
+        <span aria-hidden="true">⌕</span>
+
+        <input
+          id="card-search"
+          type="search"
+          autocomplete="off"
+          placeholder="Search cards by Pokémon name..."
+        />
+      </label>
+
+      <div class="cards-layout">
+        <aside class="panel card-filters">
+          <div class="panel__heading">
+            <h2>Filters</h2>
+
+            <button id="reset-card-filters" class="text-button" type="button">
+              Reset
+            </button>
+          </div>
+
+          <div class="card-filter-control">
+            <label for="card-supertype-filter"> Card Category </label>
+
+            <select id="card-supertype-filter">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+
+          <div class="card-filter-control">
+            <label for="card-subtype-filter"> Subtype </label>
+
+            <select id="card-subtype-filter">
+              <option value="">All Subtypes</option>
+            </select>
+          </div>
+
+          <div class="card-filter-control">
+            <label for="card-type-filter"> Energy Type </label>
+
+            <select id="card-type-filter">
+              <option value="">All Types</option>
+            </select>
+          </div>
+
+          <div class="card-filter-control">
+            <label for="card-rarity-filter"> Rarity </label>
+
+            <select id="card-rarity-filter">
+              <option value="">All Rarities</option>
+            </select>
+          </div>
+
+          <div class="card-filter-control">
+            <label for="card-set-filter"> Set </label>
+
+            <select id="card-set-filter">
+              <option value="">All Sets</option>
+            </select>
+          </div>
+        </aside>
+
+        <section class="card-results">
+          <div class="card-results__toolbar">
+            <p>
+              <span id="card-result-count">0</span>
+              of
+              <span id="card-total-count">0</span>
+              cards shown
+            </p>
+
+            <select id="card-sort" aria-label="Sort trading cards">
+              <option value="name">Sort by name</option>
+
+              <option value="-set.releaseDate">Newest sets</option>
+
+              <option value="set.releaseDate">Oldest sets</option>
+
+              <option value="number">Sort by card number</option>
+
+              <option value="rarity">Sort by rarity</option>
+
+              <option value="-hp">Highest HP</option>
+
+              <option value="artist">Sort by artist</option>
+
+              <option value="set.name">Sort by set name</option>
+
+              <option value="price-high">Price: high to low</option>
+
+              <option value="price-low">Price: low to high</option>
+            </select>
+          </div>
+
+          <p id="cards-message" class="cards-message" aria-live="polite"></p>
+
+          <div id="cards-content" class="tcg-card-grid" aria-live="polite">
+            <p class="loading-message">Loading trading cards...</p>
+          </div>
+
+          <nav class="card-pagination" aria-label="Trading card pages">
+            <button
+              id="previous-card-page"
+              class="button button--secondary"
+              type="button"
+              disabled
+            >
+              ← Previous
+            </button>
+
+            <span id="card-page-indicator"> Page 1 </span>
+
+            <button
+              id="next-card-page"
+              class="button button--secondary"
+              type="button"
+            >
+              Next →
+            </button>
+          </nav>
+        </section>
+      </div>
     </main>
 
     <div id="site-footer"></div>
