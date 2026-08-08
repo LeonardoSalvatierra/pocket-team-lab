@@ -16,7 +16,10 @@ import {
 
 import { getDefensiveEffectiveness } from "../services/type-analysis-service.js";
 
-import { getStorage, setStorage, storageKeys } from "../storage/storage.js";
+import {
+  isFavoritePokemon,
+  toggleFavoritePokemon,
+} from "../services/favorite-service.js";
 
 import {
   capitalize,
@@ -173,13 +176,6 @@ function createEffectivenessBadges(items) {
     .join("");
 }
 
-// Checks whether this Pokémon is already a favorite.
-function isFavorite(pokemonId) {
-  const favorites = getStorage(storageKeys.favoritePokemon, []);
-
-  return favorites.some((pokemon) => pokemon.id === pokemonId);
-}
-
 // Updates the favorite button appearance.
 function updateFavoriteButton(pokemonId) {
   const button = document.querySelector("#detail-favorite-button");
@@ -188,7 +184,7 @@ function updateFavoriteButton(pokemonId) {
     return;
   }
 
-  const favorite = isFavorite(pokemonId);
+  const favorite = isFavoritePokemon(pokemonId);
 
   button.classList.toggle("detail-action--favorite-active", favorite);
 
@@ -198,26 +194,12 @@ function updateFavoriteButton(pokemonId) {
 }
 
 // Adds or removes this Pokémon from favorites.
+// Adds or removes this Pokémon from favorites.
 function toggleFavorite(pokemon) {
-  const favorites = getStorage(storageKeys.favoritePokemon, []);
+  const result = toggleFavoritePokemon(pokemon);
 
-  const favoriteIndex = favorites.findIndex(
-    (favorite) => favorite.id === pokemon.id,
-  );
-
-  if (favoriteIndex >= 0) {
-    favorites.splice(favoriteIndex, 1);
-  } else {
-    favorites.push({
-      id: pokemon.id,
-      name: pokemon.name,
-      image: getPokemonImage(pokemon),
-      types: pokemon.types.map(({ type }) => type.name),
-    });
-  }
-
-  setStorage(storageKeys.favoritePokemon, favorites);
   updateFavoriteButton(pokemon.id);
+  showActionMessage(result.message, true);
 }
 
 // Displays a temporary action message.

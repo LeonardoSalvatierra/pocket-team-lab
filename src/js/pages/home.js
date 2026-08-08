@@ -17,7 +17,7 @@ import {
   updateSavedTeam,
 } from "../services/team-service.js";
 
-import { getStorage, setStorage, storageKeys } from "../storage/storage.js";
+import { toggleFavoritePokemon } from "../services/favorite-service.js";
 
 import { capitalize, showError } from "../utils.js";
 
@@ -437,31 +437,28 @@ function saveCurrentTeamFromExplorer(event) {
   editingNotice.hidden = true;
 }
 
-// Adds one Pokémon to favorites.
-function addPokemonToFavorites(pokemonId) {
-  const favorites = getStorage(storageKeys.favoritePokemon, []);
-
+// Adds or removes one Pokémon from favorites.
+function togglePokemonFavorite(pokemonId, favoriteButton) {
   const pokemon = loadedPokemon.find((item) => item.id === pokemonId);
 
   if (!pokemon) {
     return;
   }
 
-  const alreadyFavorite = favorites.some((item) => item.id === pokemonId);
+  const result = toggleFavoritePokemon(pokemon);
 
-  if (alreadyFavorite) {
-    return;
-  }
+  favoriteButton.textContent = result.favorite ? "♥" : "♡";
 
-  favorites.push({
-    id: pokemon.id,
-    name: pokemon.name,
-    image:
-      pokemon.sprites.other["official-artwork"].front_default ||
-      pokemon.sprites.front_default,
-  });
+  favoriteButton.classList.toggle("favorite-button--active", result.favorite);
 
-  setStorage(storageKeys.favoritePokemon, favorites);
+  favoriteButton.setAttribute("aria-pressed", result.favorite.toString());
+
+  favoriteButton.setAttribute(
+    "aria-label",
+    `${result.favorite ? "Remove" : "Add"} ${pokemon.name} ${
+      result.favorite ? "from" : "to"
+    } favorites`,
+  );
 }
 
 // Resets search, filters, and sorting.
@@ -562,11 +559,10 @@ function addEventListeners() {
     }
 
     if (favoriteButton) {
-      addPokemonToFavorites(Number(favoriteButton.dataset.favoriteId));
-
-      favoriteButton.textContent = "♥";
-
-      favoriteButton.classList.add("favorite-button--active");
+      togglePokemonFavorite(
+        Number(favoriteButton.dataset.favoriteId),
+        favoriteButton,
+      );
     }
   });
 

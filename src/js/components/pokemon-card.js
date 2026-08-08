@@ -1,13 +1,18 @@
+import { isFavoritePokemon } from "../services/favorite-service.js";
+
 import { capitalize, formatPokemonNumber } from "../utils.js";
-// Finds and returns one statistic from a Pokémon object.
+
+// Finds one statistic in a Pokémon object.
 function getStat(pokemon, statName) {
   const statistic = pokemon.stats.find((item) => item.stat.name === statName);
 
   return statistic?.base_stat ?? 0;
 }
-// Creates the complete HTML card for one Pokémon.
+
+// Creates one complete Explorer Pokémon card.
 export function createPokemonCard(pokemon) {
   const article = document.createElement("article");
+
   article.classList.add("pokemon-card");
 
   const image =
@@ -16,21 +21,29 @@ export function createPokemonCard(pokemon) {
 
   const types = pokemon.types
     .map(
-      ({ type }) =>
-        `<span class="pokemon-type pokemon-type--${type.name}">
+      ({ type }) => `
+        <span
+          class="pokemon-type pokemon-type--${type.name}"
+        >
           ${type.name}
-        </span>`,
+        </span>
+      `,
     )
     .join("");
 
+  const favorite = isFavoritePokemon(pokemon.id);
+
   article.innerHTML = `
     <button
-      class="favorite-button"
+      class="favorite-button ${favorite ? "favorite-button--active" : ""}"
       type="button"
-      aria-label="Add ${pokemon.name} to favorites"
+      aria-label="${favorite ? "Remove" : "Add"} ${pokemon.name} ${
+        favorite ? "from" : "to"
+      } favorites"
+      aria-pressed="${favorite}"
       data-favorite-id="${pokemon.id}"
     >
-      ♡
+      ${favorite ? "♥" : "♡"}
     </button>
 
     <img
@@ -38,11 +51,14 @@ export function createPokemonCard(pokemon) {
       src="${image}"
       alt="${capitalize(pokemon.name)}"
       loading="lazy"
-    >
+    />
 
     <div class="pokemon-card__content">
       <div class="pokemon-card__heading">
-        <span>${formatPokemonNumber(pokemon.id)}</span>
+        <span>
+          ${formatPokemonNumber(pokemon.id)}
+        </span>
+
         <h3>${capitalize(pokemon.name)}</h3>
       </div>
 
