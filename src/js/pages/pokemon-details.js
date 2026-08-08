@@ -28,6 +28,15 @@ import {
   showError,
 } from "../utils.js";
 
+import {
+  addPokemonToComparison,
+  clearComparison,
+  getComparisonPokemon,
+  isPokemonInComparison,
+  maximumComparisonSize,
+  removePokemonFromComparison,
+} from "../services/comparison-service.js";
+
 // Safely prepares text before placing it in HTML.
 function escapeHtml(value) {
   const element = document.createElement("div");
@@ -247,6 +256,72 @@ function addPokemonToTeam(pokemon) {
   }
 }
 
+// Updates the comparison controls on Pokémon Details.
+function updateComparisonControls(pokemon) {
+  const button = document.querySelector("#detail-comparison-button");
+  const status = document.querySelector("#detail-comparison-status");
+  const selectedNames = document.querySelector("#detail-comparison-names");
+
+  if (!button || !status || !selectedNames) {
+    return;
+  }
+
+  const comparison = getComparisonPokemon();
+  const selected = isPokemonInComparison(pokemon.id);
+  const full = comparison.length >= maximumComparisonSize;
+
+  status.textContent = `Comparison ${comparison.length}/${maximumComparisonSize}`;
+
+  selectedNames.textContent =
+    comparison.length > 0
+      ? comparison.map((item) => formatName(item.name)).join(" vs. ")
+      : "No Pokémon selected yet.";
+
+  button.classList.toggle("detail-action--favorite-active", selected);
+
+  if (selected) {
+    button.textContent = "Remove from Comparison";
+    button.disabled = false;
+    return;
+  }
+
+  if (full) {
+    button.textContent = "Comparison Full";
+    button.disabled = true;
+    return;
+  }
+
+  button.textContent = "+ Add to Comparison";
+  button.disabled = false;
+}
+
+// Adds or removes the current Pokémon from comparison.
+function toggleComparisonPokemon(pokemon) {
+  if (isPokemonInComparison(pokemon.id)) {
+    removePokemonFromComparison(pokemon.id);
+
+    showActionMessage(
+      `${formatName(pokemon.name)} was removed from the comparison.`,
+      true,
+    );
+  } else {
+    const result = addPokemonToComparison(pokemon);
+
+    showActionMessage(result.message, result.success);
+  }
+
+  updateComparisonControls(pokemon);
+}
+
+// Clears the current comparison from Pokémon Details.
+function clearPokemonComparison(pokemon) {
+  clearComparison();
+
+  showActionMessage("The comparison was cleared.", true);
+
+  updateComparisonControls(pokemon);
+}
+
 // Creates the previous and next navigation.
 function renderPokemonNavigation(allPokemon, currentPokemon) {
   const navigation = document.querySelector("#pokemon-navigation");
@@ -355,7 +430,7 @@ function renderPokemonDetails(pokemon, species, effectiveness) {
             ${description}
           </p>
 
-          <div class="pokemon-detail__actions">
+                    <div class="pokemon-detail__actions">
             <button
               id="detail-team-button"
               class="detail-action detail-action--primary"
@@ -372,7 +447,44 @@ function renderPokemonDetails(pokemon, species, effectiveness) {
             >
               ♡ Add to Favorites
             </button>
+
+            <button
+              id="detail-comparison-button"
+              class="detail-action"
+              type="button"
+            >
+              + Add to Comparison
+            </button>
           </div>
+
+          <aside class="detail-comparison-panel">
+            <div>
+              <strong id="detail-comparison-status">
+                Comparison 0/2
+              </strong>
+
+              <span id="detail-comparison-names">
+                No Pokémon selected yet.
+              </span>
+            </div>
+
+            <div class="detail-comparison-panel__actions">
+              <a
+                class="text-button"
+                href="${import.meta.env.BASE_URL}comparison/comparison.html"
+              >
+                View Comparison
+              </a>
+
+              <button
+                id="clear-detail-comparison"
+                class="text-button"
+                type="button"
+              >
+                Clear
+              </button>
+            </div>
+          </aside>
 
           <p
             id="detail-action-message"
@@ -522,6 +634,7 @@ function renderPokemonDetails(pokemon, species, effectiveness) {
   document.title = `${formatName(pokemon.name)} | Pocket Team Lab`;
 
   updateFavoriteButton(pokemon.id);
+  updateComparisonControls(pokemon);
 
   document
     .querySelector("#detail-team-button")
@@ -533,6 +646,17 @@ function renderPokemonDetails(pokemon, species, effectiveness) {
     .querySelector("#detail-favorite-button")
     .addEventListener("click", () => {
       toggleFavorite(pokemon);
+    });
+  document
+    .querySelector("#detail-comparison-button")
+    .addEventListener("click", () => {
+      toggleComparisonPokemon(pokemon);
+    });
+
+  document
+    .querySelector("#clear-detail-comparison")
+    .addEventListener("click", () => {
+      clearPokemonComparison(pokemon);
     });
 }
 

@@ -30,7 +30,7 @@
     left: 0;
     z-index: 200;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     min-height: 66px;
     border-top: 1px solid var(--color-border);
     background: #101522;
@@ -38,12 +38,16 @@
 
   .mobile-navigation a {
     display: flex;
+    min-width: 0;
     align-items: center;
     justify-content: center;
     gap: 0.2rem;
     flex-direction: column;
+    padding-inline: 0.15rem;
+    overflow: hidden;
     color: var(--color-text-muted);
-    font-size: 0.68rem;
+    font-size: 0.62rem;
+    text-align: center;
   }
 
   .site-footer {

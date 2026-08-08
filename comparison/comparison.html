@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="description"
+      content="Compare two Pokémon and review their base statistics."
+    />
+
+    <title>Pokémon Comparison | Pocket Team Lab</title>
+
+    <link rel="icon" href="/images/favicon.svg" />
+    <link rel="stylesheet" href="/src/css/styles.css" />
+    <link rel="stylesheet" href="/src/css/pages/comparison.css" />
+    <link rel="stylesheet" href="/src/css/responsive.css" />
+  </head>
+
+  <body>
+    <div id="site-header"></div>
+
+    <main class="page-container comparison-page">
+      <header class="comparison-header">
+        <div>
+          <p class="comparison-header__eyebrow">Pokémon Comparison</p>
+
+          <h1>Compare two Pokémon</h1>
+
+          <p>
+            Search by name or Pokédex number, or add Pokémon from their details
+            pages.
+          </p>
+        </div>
+
+        <button
+          id="clear-comparison"
+          class="button button--secondary"
+          type="button"
+        >
+          Clear Comparison
+        </button>
+      </header>
+
+      <p
+        id="comparison-message"
+        class="comparison-message"
+        aria-live="polite"
+      ></p>
+
+      <datalist id="pokemon-suggestions"></datalist>
+
+      <section class="comparison-selectors" aria-label="Pokémon selections">
+        <article class="panel comparison-selector">
+          <form class="comparison-search" data-comparison-form="0">
+            <label for="comparison-search-one">Pokémon 1</label>
+
+            <div>
+              <input
+                id="comparison-search-one"
+                name="pokemon"
+                type="search"
+                list="pokemon-suggestions"
+                placeholder="Name or number..."
+                autocomplete="off"
+                required
+              />
+
+              <button class="button button--primary" type="submit">
+                Select
+              </button>
+            </div>
+          </form>
+
+          <div
+            id="comparison-slot-one"
+            class="comparison-slot"
+            aria-live="polite"
+          ></div>
+        </article>
+
+        <div class="comparison-versus" aria-hidden="true">VS</div>
+
+        <article class="panel comparison-selector">
+          <form class="comparison-search" data-comparison-form="1">
+            <label for="comparison-search-two">Pokémon 2</label>
+
+            <div>
+              <input
+                id="comparison-search-two"
+                name="pokemon"
+                type="search"
+                list="pokemon-suggestions"
+                placeholder="Name or number..."
+                autocomplete="off"
+                required
+              />
+
+              <button class="button button--primary" type="submit">
+                Select
+              </button>
+            </div>
+          </form>
+
+          <div
+            id="comparison-slot-two"
+            class="comparison-slot"
+            aria-live="polite"
+          ></div>
+        </article>
+      </section>
+
+      <section
+        id="comparison-results"
+        class="comparison-results"
+        aria-live="polite"
+        hidden
+      ></section>
+    </main>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="/src/js/pages/comparison.js"></script>
+  </body>
+</html>

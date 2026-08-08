@@ -373,6 +373,61 @@
   font-size: 0.78rem;
 }
 
+/* Pokémon comparison controls */
+
+.detail-comparison-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface-light);
+}
+
+.detail-comparison-panel > div:first-child {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.detail-comparison-panel strong {
+  color: var(--color-blue);
+}
+
+.detail-comparison-panel span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.detail-comparison-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.detail-comparison-panel__actions a {
+  color: var(--color-blue);
+}
+
+.detail-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 650px) {
+  .detail-comparison-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .detail-comparison-panel__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 /* Responsive Details page */
 
 @media (max-width: 1000px) {

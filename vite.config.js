@@ -17,6 +17,8 @@ export default defineConfig(({ command, isPreview }) => ({
 
         cardDetails: resolve(process.cwd(), "card-details/card-details.html"),
 
+        comparison: resolve(process.cwd(), "comparison/comparison.html"),
+
         favorites: resolve(process.cwd(), "favorites/favorites.html"),
 
         myTeams: resolve(process.cwd(), "my-teams/my-teams.html"),
