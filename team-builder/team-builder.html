@@ -2,28 +2,179 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta name="description" content="Build and analyze your Pokémon team." />
+    <meta
+      name="description"
+      content="Create, organize, save, and analyze your Pokémon team."
+    />
 
     <title>Team Builder | Pocket Team Lab</title>
 
     <link rel="icon" href="/images/favicon.svg" />
     <link rel="stylesheet" href="/src/css/styles.css" />
+
     <link rel="stylesheet" href="/src/css/pages/team-builder.css" />
+
     <link rel="stylesheet" href="/src/css/responsive.css" />
   </head>
 
   <body>
     <div id="site-header"></div>
 
-    <main class="page-container">
-      <h1>Team Builder</h1>
-      <p>Create a team with up to six Pokémon.</p>
+    <main class="page-container team-builder-page">
+      <header class="team-builder-header">
+        <div>
+          <p class="team-builder-header__eyebrow">Team Creator</p>
 
-      <section id="team-builder-content" class="panel">
-        <p>This section is under construction.</p>
-      </section>
+          <h1>Build your Pokémon team</h1>
+
+          <p>
+            Choose up to six Pokémon, organize your team, and review its
+            strengths and weaknesses.
+          </p>
+        </div>
+
+        <a class="button button--secondary" data-route="">
+          ← Explore Pokémon
+        </a>
+      </header>
+
+      <div class="team-builder-layout">
+        <!-- Pokémon slots -->
+
+        <section
+          class="panel team-builder-workspace"
+          aria-labelledby="current-team-title"
+        >
+          <div class="team-builder-title">
+            <div>
+              <h2 id="current-team-title">Current Team</h2>
+
+              <p>
+                <span id="builder-team-count">0</span>
+                of 6 Pokémon selected
+              </p>
+            </div>
+
+            <button id="clear-team" class="text-button" type="button">
+              Clear team
+            </button>
+          </div>
+
+          <div id="team-slots" class="team-slots" aria-live="polite"></div>
+        </section>
+
+        <!-- Right sidebar -->
+
+        <aside class="team-builder-sidebar">
+          <form id="save-team-form" class="panel save-team-form">
+            <h2>Team Information</h2>
+
+            <p id="editing-team-notice" class="editing-team-notice" hidden>
+              You are editing an existing saved team.
+            </p>
+
+            <label for="team-name">Team name</label>
+
+            <input
+              id="team-name"
+              name="teamName"
+              type="text"
+              maxlength="40"
+              placeholder="Example: My Dream Team"
+              required
+            />
+
+            <p class="form-help">
+              Give your team a short and recognizable name.
+            </p>
+
+            <button
+              id="save-team-button"
+              class="button button--primary button--full"
+              type="submit"
+            >
+              Save Team
+            </button>
+
+            <p id="team-message" class="team-message" aria-live="polite"></p>
+          </form>
+
+          <section
+            class="panel type-summary"
+            aria-labelledby="type-summary-title"
+          >
+            <h2 id="type-summary-title">Type Summary</h2>
+
+            <div id="type-summary-content">
+              <p class="placeholder-text">
+                Add Pokémon to see the team type summary.
+              </p>
+            </div>
+          </section>
+        </aside>
+
+        <!-- Team analysis -->
+
+        <section class="team-analysis" aria-labelledby="team-analysis-title">
+          <div class="team-analysis__header">
+            <div>
+              <p class="team-analysis__eyebrow">Team Analysis</p>
+
+              <h2 id="team-analysis-title">Team performance</h2>
+            </div>
+
+            <p id="analysis-status" aria-live="polite">
+              Add Pokémon to analyze your team.
+            </p>
+          </div>
+
+          <div class="team-analysis__grid">
+            <article class="panel analysis-panel">
+              <h3>Average Base Stats</h3>
+
+              <p class="analysis-panel__description">
+                Average HP, Attack, and Defense across the current team.
+              </p>
+
+              <div id="team-stat-bars">
+                <p class="placeholder-text">No statistics available yet.</p>
+              </div>
+
+              <div id="stat-summary" class="analysis-summary"></div>
+            </article>
+
+            <article class="panel analysis-panel">
+              <h3>Shared Weaknesses</h3>
+
+              <p class="analysis-panel__description">
+                Attack types that are effective against multiple team members.
+              </p>
+
+              <div id="weakness-summary">
+                <p class="placeholder-text">No weaknesses available yet.</p>
+              </div>
+            </article>
+
+            <article class="panel analysis-panel">
+              <h3>Team Balance</h3>
+
+              <p class="analysis-panel__description">
+                Basic suggestions based on team size, types, and defensive
+                coverage.
+              </p>
+
+              <div id="balance-summary">
+                <p class="placeholder-text">
+                  No balance information available yet.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
     </main>
 
     <div id="site-footer"></div>

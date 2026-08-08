@@ -1,0 +1,223 @@
+/* My Teams page */
+
+.my-teams-page {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.my-teams-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-xl);
+}
+
+.my-teams-header__eyebrow {
+  margin: 0 0 var(--space-xs);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.my-teams-header h1 {
+  margin: 0;
+  font-size: clamp(2.3rem, 5vw, 4.5rem);
+}
+
+.my-teams-header p:not(.my-teams-header__eyebrow) {
+  margin-bottom: 0;
+  color: var(--color-text-soft);
+}
+
+/* Saved teams toolbar */
+
+.my-teams-toolbar {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.my-teams-toolbar > p {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-muted);
+}
+
+.saved-teams-message--success {
+  color: var(--color-green);
+}
+
+.saved-teams-message--error {
+  color: var(--color-primary);
+}
+
+/* Saved team grid */
+
+.saved-teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-lg);
+}
+
+.saved-team-card {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+}
+
+.saved-team-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.saved-team-card__header h2 {
+  margin: 0;
+}
+
+.saved-team-card__header p {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.saved-team-card__count {
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 65, 75, 0.12);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* Pokémon inside a saved team */
+
+.saved-team-members {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.saved-team-member {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface-light);
+  text-align: center;
+}
+
+.saved-team-member img {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+}
+
+.saved-team-member span {
+  overflow: hidden;
+  width: 100%;
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Saved team controls */
+
+.saved-team-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.saved-team-card__delete {
+  min-height: 42px;
+  margin-left: auto;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid rgba(255, 65, 75, 0.35);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.saved-team-card__delete:hover {
+  background: rgba(255, 65, 75, 0.12);
+}
+
+/* Empty saved teams state */
+
+.saved-teams-empty {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-items: center;
+  padding: clamp(2rem, 8vw, 6rem);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-large);
+  text-align: center;
+}
+
+.saved-teams-empty > span {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  font-size: 2rem;
+}
+
+.saved-teams-empty h2 {
+  margin-bottom: 0;
+}
+
+.saved-teams-empty p {
+  color: var(--color-text-muted);
+}
+
+/* My Teams responsive styles */
+
+@media (max-width: 760px) {
+  .my-teams-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .my-teams-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .saved-teams-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-team-members {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .saved-team-card__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-team-card__actions .button,
+  .saved-team-card__delete {
+    width: 100%;
+    margin-left: 0;
+  }
+}

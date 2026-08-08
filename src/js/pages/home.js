@@ -1,6 +1,17 @@
 import { createPokemonCard } from "../components/pokemon-card.js";
+
 import { getPokemon, getPokemonList } from "../services/pokemon-api-service.js";
+
+import {
+  addPokemonToCurrentTeam,
+  getCurrentTeam,
+  maximumTeamSize,
+  removePokemonFromCurrentTeam,
+  saveTeam,
+} from "../services/team-service.js";
+
 import { getStorage, setStorage, storageKeys } from "../storage/storage.js";
+
 import { capitalize, showError } from "../utils.js";
 
 const pageSize = 24;
@@ -18,8 +29,8 @@ async function loadPokemonPage(page) {
   }
 
   grid.innerHTML = `
-        <p class="loading-message">Loading Pokémon...</p>
-    `;
+    <p class="loading-message">Loading Pokémon...</p>
+  `;
 
   const offset = (page - 1) * pageSize;
   const listData = await getPokemonList(pageSize, offset);
@@ -36,12 +47,10 @@ async function loadPokemonPage(page) {
   updatePagination();
 }
 
-// Updates the page number and enables or disables pagination buttons.
+// Updates the pagination buttons and page number.
 function updatePagination() {
   const previousButton = document.querySelector("#previous-page");
-
   const nextButton = document.querySelector("#next-page");
-
   const pageIndicator = document.querySelector("#page-indicator");
 
   const totalPages = Math.ceil(totalPokemon / pageSize);
@@ -51,7 +60,7 @@ function updatePagination() {
   }
 
   if (nextButton) {
-    nextButton.disabled = currentPage === totalPages;
+    nextButton.disabled = currentPage >= totalPages;
   }
 
   if (pageIndicator) {
@@ -59,7 +68,7 @@ function updatePagination() {
   }
 }
 
-// Creates and displays a card for every Pokémon in the given list.
+// Displays Pokémon cards in the explorer grid.
 function renderPokemon(pokemonList) {
   const grid = document.querySelector("#pokemon-grid");
   const resultCount = document.querySelector("#result-count");
@@ -79,22 +88,21 @@ function renderPokemon(pokemonList) {
   }
 }
 
-// Displays the current team, including its images and remove buttons.
+// Displays the current team in the Explorer sidebar.
 function renderCurrentTeam() {
   const teamContainer = document.querySelector("#current-team-list");
 
   const teamCount = document.querySelector("#team-count");
-
   const headerTeamCount = document.querySelector("#header-team-count");
 
-  const currentTeam = getStorage(storageKeys.currentTeam, []);
+  const currentTeam = getCurrentTeam();
 
   if (teamCount) {
-    teamCount.textContent = `${currentTeam.length} / 6`;
+    teamCount.textContent = `${currentTeam.length} / ${maximumTeamSize}`;
   }
 
   if (headerTeamCount) {
-    headerTeamCount.textContent = `${currentTeam.length}/6`;
+    headerTeamCount.textContent = `${currentTeam.length}/${maximumTeamSize}`;
   }
 
   if (!teamContainer) {
@@ -103,10 +111,10 @@ function renderCurrentTeam() {
 
   if (currentTeam.length === 0) {
     teamContainer.innerHTML = `
-            <p class="placeholder-text">
-                Pokémon added to the current team will appear here.
-            </p>
-        `;
+      <p class="placeholder-text">
+        Pokémon added to the current team will appear here.
+      </p>
+    `;
 
     return;
   }
@@ -114,30 +122,46 @@ function renderCurrentTeam() {
   teamContainer.innerHTML = currentTeam
     .map(
       (pokemon) => `
-                <article class="team-preview">
-                    <img
-                        src="${pokemon.image}"
-                        alt="${capitalize(pokemon.name)}"
-                    >
+        <article class="team-preview">
+          <img
+            src="${pokemon.image}"
+            alt="${capitalize(pokemon.name)}"
+          />
 
-                    <span>${capitalize(pokemon.name)}</span>
+          <span>${capitalize(pokemon.name)}</span>
 
-                    <button
-                        class="team-preview__remove"
-                        type="button"
-                        data-remove-team-id="${pokemon.id}"
-                        aria-label="Remove ${pokemon.name} from team"
-                        title="Remove from team"
-                    >
-                        &times;
-                    </button>
-                </article>
-            `,
+          <button
+            class="team-preview__remove"
+            type="button"
+            data-remove-team-id="${pokemon.id}"
+            aria-label="Remove ${pokemon.name} from team"
+            title="Remove from team"
+          >
+            &times;
+          </button>
+        </article>
+      `,
     )
     .join("");
 }
 
-// Sorts the Pokémon currently loaded on the page.
+// Displays a message under the quick-save form.
+function showQuickSaveMessage(message, messageType = "") {
+  const messageElement = document.querySelector("#quick-save-message");
+
+  if (!messageElement) {
+    return;
+  }
+
+  messageElement.textContent = message;
+  messageElement.className = "team-message";
+
+  if (messageType) {
+    messageElement.classList.add(`team-message--${messageType}`);
+  }
+}
+
+// Sorts the Pokémon currently loaded.
 function sortPokemon(sortValue) {
   const sortedPokemon = [...loadedPokemon];
 
@@ -166,41 +190,24 @@ function sortPokemon(sortValue) {
   renderPokemon(sortedPokemon);
 }
 
-// Filters the Pokémon on the current page by name or number.
+// Filters the current page by Pokémon name or number.
 function filterPokemon(searchValue) {
   const normalizedSearch = searchValue.trim().toLowerCase();
 
-  const filteredPokemon = loadedPokemon.filter((pokemon) => {
-    return (
+  const filteredPokemon = loadedPokemon.filter(
+    (pokemon) =>
       pokemon.name.includes(normalizedSearch) ||
-      pokemon.id.toString() === normalizedSearch
-    );
-  });
+      pokemon.id.toString() === normalizedSearch,
+  );
 
   renderPokemon(filteredPokemon);
 }
 
-// Adds a Pokémon to the current team and saves it in localStorage.
+// Adds one Pokémon to the current team.
 function addPokemonToTeam(pokemonId) {
-  const currentTeam = getStorage(storageKeys.currentTeam, []);
-
-  if (currentTeam.length >= 6) {
-    window.alert("Your team already has six Pokémon.");
-
-    return;
-  }
-
   const pokemon = loadedPokemon.find((item) => item.id === pokemonId);
 
   if (!pokemon) {
-    return;
-  }
-
-  const alreadyAdded = currentTeam.some((item) => item.id === pokemonId);
-
-  if (alreadyAdded) {
-    window.alert("This Pokémon is already in your team.");
-
     return;
   }
 
@@ -213,23 +220,43 @@ function addPokemonToTeam(pokemonId) {
     types: pokemon.types.map(({ type }) => type.name),
   };
 
-  currentTeam.push(teamPokemon);
+  const result = addPokemonToCurrentTeam(teamPokemon);
 
-  setStorage(storageKeys.currentTeam, currentTeam);
+  if (!result.success) {
+    window.alert(result.message);
+    return;
+  }
+
   renderCurrentTeam();
 }
 
 // Removes one Pokémon from the current team.
 function removePokemonFromTeam(pokemonId) {
-  const currentTeam = getStorage(storageKeys.currentTeam, []);
-
-  const updatedTeam = currentTeam.filter((pokemon) => pokemon.id !== pokemonId);
-
-  setStorage(storageKeys.currentTeam, updatedTeam);
+  removePokemonFromCurrentTeam(pokemonId);
   renderCurrentTeam();
 }
 
-// Adds a Pokémon to the favorites saved in localStorage.
+// Saves the current team directly from the Explorer.
+function saveCurrentTeamFromExplorer(event) {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const nameInput = document.querySelector("#quick-team-name");
+
+  const result = saveTeam(nameInput.value);
+
+  showQuickSaveMessage(result.message, result.success ? "success" : "error");
+
+  if (!result.success) {
+    nameInput.focus();
+    return;
+  }
+
+  form.reset();
+  renderCurrentTeam();
+}
+
+// Adds one Pokémon to favorites.
 function addPokemonToFavorites(pokemonId) {
   const favorites = getStorage(storageKeys.favoritePokemon, []);
 
@@ -256,15 +283,15 @@ function addPokemonToFavorites(pokemonId) {
   setStorage(storageKeys.favoritePokemon, favorites);
 }
 
-// Connects buttons and form controls with their JavaScript actions.
+// Connects the home page controls.
 function addEventListeners() {
   const searchInput = document.querySelector("#pokemon-search");
-
   const sortSelect = document.querySelector("#sort-select");
-
   const grid = document.querySelector("#pokemon-grid");
 
   const teamContainer = document.querySelector("#current-team-list");
+
+  const quickSaveForm = document.querySelector("#quick-save-team-form");
 
   const previousButton = document.querySelector("#previous-page");
 
@@ -315,7 +342,6 @@ function addEventListeners() {
       addPokemonToFavorites(Number(favoriteButton.dataset.favoriteId));
 
       favoriteButton.textContent = "♥";
-
       favoriteButton.classList.add("favorite-button--active");
     }
   });
@@ -327,13 +353,13 @@ function addEventListeners() {
       return;
     }
 
-    const pokemonId = Number(removeButton.dataset.removeTeamId);
-
-    removePokemonFromTeam(pokemonId);
+    removePokemonFromTeam(Number(removeButton.dataset.removeTeamId));
   });
+
+  quickSaveForm?.addEventListener("submit", saveCurrentTeamFromExplorer);
 }
 
-// Starts the home page, shows the saved team, and loads page one.
+// Starts the Explorer.
 export async function initializeHome() {
   const grid = document.querySelector("#pokemon-grid");
 

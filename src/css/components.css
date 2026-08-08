@@ -184,3 +184,61 @@
   color: var(--color-text-muted);
   text-align: center;
 }
+
+/* Reusable Pokémon stat bars */
+
+.stat-bars {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.stat-bar {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.stat-bar__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  color: var(--color-text-soft);
+  font-size: 0.8rem;
+}
+
+.stat-bar__heading span {
+  font-weight: 800;
+}
+
+.stat-bar__heading strong {
+  color: var(--color-text);
+}
+
+.stat-bar__track {
+  position: relative;
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-surface-light);
+}
+
+.stat-bar__fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 500ms ease;
+}
+
+.stat-bar--hp .stat-bar__fill {
+  background: var(--color-green);
+}
+
+.stat-bar--attack .stat-bar__fill {
+  background: var(--color-primary);
+}
+
+.stat-bar--defense .stat-bar__fill {
+  background: var(--color-blue);
+}

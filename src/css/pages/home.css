@@ -325,6 +325,54 @@
   outline-offset: 2px;
 }
 
+/* Quick team save form */
+
+.quick-save-team {
+  display: grid;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.quick-save-team label {
+  color: var(--color-text-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.quick-save-team input {
+  width: 100%;
+  min-height: 42px;
+  padding-inline: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  outline: 0;
+  background: var(--color-surface-light);
+  color: var(--color-text);
+}
+
+.quick-save-team input:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(66, 117, 255, 0.12);
+}
+
+.quick-save-team .team-message {
+  min-height: 1.2rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.quick-save-team .team-message--success {
+  color: var(--color-green);
+}
+
+.quick-save-team .team-message--error {
+  color: var(--color-primary);
+}
+
 /* Home responsive layout */
 
 @media (max-width: 1200px) {

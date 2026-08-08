@@ -128,6 +128,29 @@
               </p>
             </div>
 
+            <form id="quick-save-team-form" class="quick-save-team">
+              <label for="quick-team-name">Team name</label>
+
+              <input
+                id="quick-team-name"
+                name="teamName"
+                type="text"
+                maxlength="40"
+                placeholder="My Dream Team"
+                required
+              />
+
+              <button class="button button--primary button--full" type="submit">
+                Save Current Team
+              </button>
+
+              <p
+                id="quick-save-message"
+                class="team-message"
+                aria-live="polite"
+              ></p>
+            </form>
+
             <a
               class="button button--secondary button--full"
               data-route="team-builder/team-builder.html"
