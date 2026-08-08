@@ -242,3 +242,15 @@
 .stat-bar--defense .stat-bar__fill {
   background: var(--color-blue);
 }
+
+.stat-bar--special-attack .stat-bar__fill {
+  background: #a855f7;
+}
+
+.stat-bar--special-defense .stat-bar__fill {
+  background: #22c7d6;
+}
+
+.stat-bar--speed .stat-bar__fill {
+  background: #f4b942;
+}

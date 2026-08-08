@@ -1,5 +1,12 @@
 const baseUrl = "https://pokeapi.co/api/v2";
-// Sends a request to PokéAPI and returns the JSON response.
+
+const pokemonCache = new Map();
+const typeCache = new Map();
+const generationCache = new Map();
+
+let completePokemonListPromise = null;
+
+// Sends a request to PokéAPI and returns JSON.
 async function request(endpoint) {
   const response = await fetch(`${baseUrl}${endpoint}`);
 
@@ -9,29 +16,72 @@ async function request(endpoint) {
 
   return response.json();
 }
-// Gets one page of Pokémon names using a limit and offset.
+
+// Gets one page of Pokémon names.
 export async function getPokemonList(limit = 24, offset = 0) {
   return request(`/pokemon?limit=${limit}&offset=${offset}`);
 }
-// Gets the complete information for one Pokémon.
+
+// Gets the complete lightweight list of Pokémon.
+export async function getAllPokemonList() {
+  if (!completePokemonListPromise) {
+    completePokemonListPromise = (async () => {
+      const listInformation = await getPokemonList(1, 0);
+
+      return getPokemonList(listInformation.count, 0);
+    })();
+  }
+
+  return completePokemonListPromise;
+}
+
+// Gets one Pokémon and caches the result.
 export async function getPokemon(identifier) {
   const formattedIdentifier = identifier.toString().trim().toLowerCase();
 
-  return request(`/pokemon/${formattedIdentifier}`);
+  if (!pokemonCache.has(formattedIdentifier)) {
+    pokemonCache.set(
+      formattedIdentifier,
+      request(`/pokemon/${formattedIdentifier}`),
+    );
+  }
+
+  try {
+    return await pokemonCache.get(formattedIdentifier);
+  } catch (error) {
+    pokemonCache.delete(formattedIdentifier);
+    throw error;
+  }
 }
-// Gets species information such as descriptions and evolution data.
+
+// Gets species information.
 export async function getPokemonSpecies(identifier) {
   const formattedIdentifier = identifier.toString().trim().toLowerCase();
 
   return request(`/pokemon-species/${formattedIdentifier}`);
 }
+
 // Gets information about one Pokémon type.
 export async function getPokemonType(identifier) {
   const formattedIdentifier = identifier.toString().trim().toLowerCase();
 
-  return request(`/type/${formattedIdentifier}`);
+  if (!typeCache.has(formattedIdentifier)) {
+    typeCache.set(formattedIdentifier, request(`/type/${formattedIdentifier}`));
+  }
+
+  return typeCache.get(formattedIdentifier);
 }
-// Gets the Pokémon that belong to a specific generation.
+
+// Gets the Pokémon in one generation.
 export async function getGeneration(identifier) {
-  return request(`/generation/${identifier}`);
+  const formattedIdentifier = identifier.toString().trim().toLowerCase();
+
+  if (!generationCache.has(formattedIdentifier)) {
+    generationCache.set(
+      formattedIdentifier,
+      request(`/generation/${formattedIdentifier}`),
+    );
+  }
+
+  return generationCache.get(formattedIdentifier);
 }

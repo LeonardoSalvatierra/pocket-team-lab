@@ -13,6 +13,18 @@ const statSettings = {
     label: "DEF",
     colorClass: "stat-bar--defense",
   },
+  "special-attack": {
+    label: "SP. ATK",
+    colorClass: "stat-bar--special-attack",
+  },
+  "special-defense": {
+    label: "SP. DEF",
+    colorClass: "stat-bar--special-defense",
+  },
+  speed: {
+    label: "SPEED",
+    colorClass: "stat-bar--speed",
+  },
 };
 
 // Keeps a bar percentage between zero and one hundred.
@@ -22,7 +34,7 @@ function calculatePercentage(value, maximum) {
   return Math.min(Math.max(percentage, 0), 100);
 }
 
-// Creates reusable stat bars for teams and individual Pokémon.
+// Creates reusable stat bars for teams and Pokémon details.
 export function createStatBars(
   stats,
   statNames = ["hp", "attack", "defense"],
@@ -37,6 +49,7 @@ export function createStatBars(
       }
 
       const value = Math.round(stats[statName] ?? 0);
+
       const percentage = calculatePercentage(value, maximum);
 
       return `

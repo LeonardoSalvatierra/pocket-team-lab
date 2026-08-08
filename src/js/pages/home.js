@@ -1,13 +1,20 @@
 import { createPokemonCard } from "../components/pokemon-card.js";
 
-import { getPokemon, getPokemonList } from "../services/pokemon-api-service.js";
+import {
+  getAllPokemonList,
+  getGeneration,
+  getPokemon,
+  getPokemonType,
+} from "../services/pokemon-api-service.js";
 
 import {
   addPokemonToCurrentTeam,
   getCurrentTeam,
+  getEditingTeam,
   maximumTeamSize,
   removePokemonFromCurrentTeam,
   saveTeam,
+  updateSavedTeam,
 } from "../services/team-service.js";
 
 import { getStorage, setStorage, storageKeys } from "../storage/storage.js";
@@ -15,60 +22,79 @@ import { getStorage, setStorage, storageKeys } from "../storage/storage.js";
 import { capitalize, showError } from "../utils.js";
 
 const pageSize = 24;
+const searchDelay = 350;
 
+let allPokemonReferences = [];
+let filteredPokemonReferences = [];
 let loadedPokemon = [];
-let currentPage = 1;
-let totalPokemon = 0;
 
-// Loads the Pokémon that belong to the selected page.
-async function loadPokemonPage(page) {
+let currentPage = 1;
+let searchTimer = null;
+let controlRequestNumber = 0;
+
+// Extracts the Pokémon ID from its PokéAPI URL.
+function getPokemonIdFromUrl(url) {
+  const matches = url.match(/\/pokemon\/(\d+)\//);
+
+  return matches ? Number(matches[1]) : 0;
+}
+
+// Adds IDs to the lightweight Pokémon references.
+function preparePokemonReferences(results) {
+  return results.map((pokemon) => ({
+    ...pokemon,
+    id: getPokemonIdFromUrl(pokemon.url),
+  }));
+}
+
+// Reads one base statistic.
+function getStatValue(pokemon, statName) {
+  return (
+    pokemon.stats.find((item) => item.stat.name === statName)?.base_stat ?? 0
+  );
+}
+
+// Displays a loading message in the grid.
+function showExplorerLoading(message = "Loading Pokémon...") {
   const grid = document.querySelector("#pokemon-grid");
 
-  if (!grid) {
-    return;
-  }
-
-  grid.innerHTML = `
-    <p class="loading-message">Loading Pokémon...</p>
-  `;
-
-  const offset = (page - 1) * pageSize;
-  const listData = await getPokemonList(pageSize, offset);
-
-  totalPokemon = listData.count;
-
-  loadedPokemon = await Promise.all(
-    listData.results.map((pokemon) => getPokemon(pokemon.name)),
-  );
-
-  currentPage = page;
-
-  renderPokemon(loadedPokemon);
-  updatePagination();
-}
-
-// Updates the pagination buttons and page number.
-function updatePagination() {
-  const previousButton = document.querySelector("#previous-page");
-  const nextButton = document.querySelector("#next-page");
-  const pageIndicator = document.querySelector("#page-indicator");
-
-  const totalPages = Math.ceil(totalPokemon / pageSize);
-
-  if (previousButton) {
-    previousButton.disabled = currentPage === 1;
-  }
-
-  if (nextButton) {
-    nextButton.disabled = currentPage >= totalPages;
-  }
-
-  if (pageIndicator) {
-    pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+  if (grid) {
+    grid.innerHTML = `
+      <p class="loading-message">${message}</p>
+    `;
   }
 }
 
-// Displays Pokémon cards in the explorer grid.
+// Sorts lightweight references by number or name.
+function sortPokemonReferences(references, sortValue) {
+  const sortedReferences = [...references];
+
+  if (sortValue === "name") {
+    sortedReferences.sort((first, second) =>
+      first.name.localeCompare(second.name),
+    );
+  } else {
+    sortedReferences.sort((first, second) => first.id - second.id);
+  }
+
+  return sortedReferences;
+}
+
+// Sorts loaded details by a base statistic.
+function sortLoadedPokemon(pokemonList, sortValue) {
+  const sortedPokemon = [...pokemonList];
+
+  if (["hp", "attack", "defense"].includes(sortValue)) {
+    sortedPokemon.sort(
+      (first, second) =>
+        getStatValue(second, sortValue) - getStatValue(first, sortValue),
+    );
+  }
+
+  return sortedPokemon;
+}
+
+// Displays cards in the Explorer.
 function renderPokemon(pokemonList) {
   const grid = document.querySelector("#pokemon-grid");
   const resultCount = document.querySelector("#result-count");
@@ -79,20 +105,184 @@ function renderPokemon(pokemonList) {
 
   grid.innerHTML = "";
 
-  pokemonList.forEach((pokemon) => {
-    grid.appendChild(createPokemonCard(pokemon));
-  });
+  if (pokemonList.length === 0) {
+    grid.innerHTML = `
+      <div class="explorer-empty">
+        <h3>No Pokémon found</h3>
+
+        <p>
+          Try another name, number, type, or generation.
+        </p>
+      </div>
+    `;
+  } else {
+    pokemonList.forEach((pokemon) => {
+      grid.appendChild(createPokemonCard(pokemon));
+    });
+  }
 
   if (resultCount) {
     resultCount.textContent = pokemonList.length;
   }
 }
 
-// Displays the current team in the Explorer sidebar.
+// Updates result totals and pagination controls.
+function updatePagination() {
+  const previousButton = document.querySelector("#previous-page");
+
+  const nextButton = document.querySelector("#next-page");
+
+  const pageIndicator = document.querySelector("#page-indicator");
+
+  const matchCount = document.querySelector("#match-count");
+
+  const totalMatches = filteredPokemonReferences.length;
+
+  const totalPages = Math.max(Math.ceil(totalMatches / pageSize), 1);
+
+  previousButton.disabled = currentPage <= 1 || totalMatches === 0;
+
+  nextButton.disabled = currentPage >= totalPages || totalMatches === 0;
+
+  pageIndicator.textContent =
+    totalMatches === 0 ? "No pages" : `Page ${currentPage} of ${totalPages}`;
+
+  matchCount.textContent = totalMatches;
+}
+
+// Loads details only for the current result page.
+async function loadCurrentResultPage(requestNumber) {
+  showExplorerLoading();
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const pageReferences = filteredPokemonReferences.slice(
+    startIndex,
+    startIndex + pageSize,
+  );
+
+  if (pageReferences.length === 0) {
+    loadedPokemon = [];
+
+    if (requestNumber === controlRequestNumber) {
+      renderPokemon([]);
+      updatePagination();
+    }
+
+    return;
+  }
+
+  const pokemonDetails = await Promise.all(
+    pageReferences.map((pokemon) => getPokemon(pokemon.id || pokemon.name)),
+  );
+
+  if (requestNumber !== controlRequestNumber) {
+    return;
+  }
+
+  const sortValue = document.querySelector("#sort-select").value;
+
+  loadedPokemon = sortLoadedPokemon(pokemonDetails, sortValue);
+
+  renderPokemon(loadedPokemon);
+  updatePagination();
+}
+
+// Gets names that belong to a selected type.
+async function getTypeNames(typeName) {
+  if (!typeName) {
+    return null;
+  }
+
+  const typeData = await getPokemonType(typeName);
+
+  return new Set(typeData.pokemon.map((entry) => entry.pokemon.name));
+}
+
+// Gets names that belong to a selected generation.
+async function getGenerationNames(generationId) {
+  if (!generationId) {
+    return null;
+  }
+
+  const generationData = await getGeneration(generationId);
+
+  return new Set(generationData.pokemon_species.map((pokemon) => pokemon.name));
+}
+
+// Applies search, filters, sorting, and pagination.
+async function applyExplorerControls(resetPage = true) {
+  const requestNumber = ++controlRequestNumber;
+
+  const searchValue = document
+    .querySelector("#pokemon-search")
+    .value.trim()
+    .toLowerCase();
+
+  const typeValue = document.querySelector("#type-filter").value;
+
+  const generationValue = document.querySelector("#generation-filter").value;
+
+  const sortValue = document.querySelector("#sort-select").value;
+
+  showExplorerLoading("Applying filters...");
+
+  try {
+    const [typeNames, generationNames] = await Promise.all([
+      getTypeNames(typeValue),
+      getGenerationNames(generationValue),
+    ]);
+
+    if (requestNumber !== controlRequestNumber) {
+      return;
+    }
+
+    let references = allPokemonReferences.filter((pokemon) => {
+      const matchesSearch =
+        !searchValue ||
+        pokemon.name.includes(searchValue) ||
+        pokemon.id.toString() === searchValue;
+
+      const matchesType = !typeNames || typeNames.has(pokemon.name);
+
+      const matchesGeneration =
+        !generationNames || generationNames.has(pokemon.name);
+
+      return matchesSearch && matchesType && matchesGeneration;
+    });
+
+    references = sortPokemonReferences(references, sortValue);
+
+    filteredPokemonReferences = references;
+
+    if (resetPage) {
+      currentPage = 1;
+    }
+
+    const totalPages = Math.max(Math.ceil(references.length / pageSize), 1);
+
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+
+    await loadCurrentResultPage(requestNumber);
+  } catch (error) {
+    console.error("Explorer controls error:", error);
+
+    if (requestNumber === controlRequestNumber) {
+      showError(
+        document.querySelector("#pokemon-grid"),
+        "The filters could not be applied.",
+      );
+    }
+  }
+}
+
+// Displays the current team.
 function renderCurrentTeam() {
   const teamContainer = document.querySelector("#current-team-list");
 
   const teamCount = document.querySelector("#team-count");
+
   const headerTeamCount = document.querySelector("#header-team-count");
 
   const currentTeam = getCurrentTeam();
@@ -145,7 +335,28 @@ function renderCurrentTeam() {
     .join("");
 }
 
-// Displays a message under the quick-save form.
+// Configures Explorer when editing a saved team.
+function configureQuickTeamForm() {
+  const editingTeam = getEditingTeam();
+
+  if (!editingTeam) {
+    return;
+  }
+
+  const nameInput = document.querySelector("#quick-team-name");
+
+  const saveButton = document.querySelector("#quick-save-team-button");
+
+  const editingNotice = document.querySelector("#quick-editing-team-notice");
+
+  nameInput.value = editingTeam.name;
+  saveButton.textContent = "Update Team";
+
+  editingNotice.hidden = false;
+  editingNotice.textContent = `Editing "${editingTeam.name}"`;
+}
+
+// Displays a quick-save form message.
 function showQuickSaveMessage(message, messageType = "") {
   const messageElement = document.querySelector("#quick-save-message");
 
@@ -159,48 +370,6 @@ function showQuickSaveMessage(message, messageType = "") {
   if (messageType) {
     messageElement.classList.add(`team-message--${messageType}`);
   }
-}
-
-// Sorts the Pokémon currently loaded.
-function sortPokemon(sortValue) {
-  const sortedPokemon = [...loadedPokemon];
-
-  if (sortValue === "name") {
-    sortedPokemon.sort((first, second) =>
-      first.name.localeCompare(second.name),
-    );
-  }
-
-  if (sortValue === "number") {
-    sortedPokemon.sort((first, second) => first.id - second.id);
-  }
-
-  if (sortValue === "hp") {
-    sortedPokemon.sort((first, second) => {
-      const firstHp =
-        first.stats.find((stat) => stat.stat.name === "hp")?.base_stat ?? 0;
-
-      const secondHp =
-        second.stats.find((stat) => stat.stat.name === "hp")?.base_stat ?? 0;
-
-      return secondHp - firstHp;
-    });
-  }
-
-  renderPokemon(sortedPokemon);
-}
-
-// Filters the current page by Pokémon name or number.
-function filterPokemon(searchValue) {
-  const normalizedSearch = searchValue.trim().toLowerCase();
-
-  const filteredPokemon = loadedPokemon.filter(
-    (pokemon) =>
-      pokemon.name.includes(normalizedSearch) ||
-      pokemon.id.toString() === normalizedSearch,
-  );
-
-  renderPokemon(filteredPokemon);
 }
 
 // Adds one Pokémon to the current team.
@@ -236,14 +405,19 @@ function removePokemonFromTeam(pokemonId) {
   renderCurrentTeam();
 }
 
-// Saves the current team directly from the Explorer.
+// Saves or updates the team from Explorer.
 function saveCurrentTeamFromExplorer(event) {
   event.preventDefault();
 
   const form = event.currentTarget;
+
   const nameInput = document.querySelector("#quick-team-name");
 
-  const result = saveTeam(nameInput.value);
+  const editingTeam = getEditingTeam();
+
+  const result = editingTeam
+    ? updateSavedTeam(editingTeam.id, nameInput.value)
+    : saveTeam(nameInput.value);
 
   showQuickSaveMessage(result.message, result.success ? "success" : "error");
 
@@ -254,6 +428,13 @@ function saveCurrentTeamFromExplorer(event) {
 
   form.reset();
   renderCurrentTeam();
+
+  const saveButton = document.querySelector("#quick-save-team-button");
+
+  const editingNotice = document.querySelector("#quick-editing-team-notice");
+
+  saveButton.textContent = "Save Current Team";
+  editingNotice.hidden = true;
 }
 
 // Adds one Pokémon to favorites.
@@ -283,10 +464,28 @@ function addPokemonToFavorites(pokemonId) {
   setStorage(storageKeys.favoritePokemon, favorites);
 }
 
-// Connects the home page controls.
+// Resets search, filters, and sorting.
+async function resetExplorerControls() {
+  document.querySelector("#pokemon-search").value = "";
+  document.querySelector("#type-filter").value = "";
+  document.querySelector("#generation-filter").value = "";
+  document.querySelector("#sort-select").value = "number";
+
+  await applyExplorerControls(true);
+}
+
+// Connects all Explorer controls.
 function addEventListeners() {
   const searchInput = document.querySelector("#pokemon-search");
+
+  const typeFilter = document.querySelector("#type-filter");
+
+  const generationFilter = document.querySelector("#generation-filter");
+
   const sortSelect = document.querySelector("#sort-select");
+
+  const resetButton = document.querySelector("#reset-filters");
+
   const grid = document.querySelector("#pokemon-grid");
 
   const teamContainer = document.querySelector("#current-team-list");
@@ -297,39 +496,63 @@ function addEventListeners() {
 
   const nextButton = document.querySelector("#next-page");
 
-  previousButton?.addEventListener("click", async () => {
-    if (currentPage > 1) {
-      await loadPokemonPage(currentPage - 1);
-
-      window.scrollTo({
-        top: 450,
-        behavior: "smooth",
-      });
+  previousButton.addEventListener("click", async () => {
+    if (currentPage <= 1) {
+      return;
     }
+
+    currentPage -= 1;
+    const requestNumber = ++controlRequestNumber;
+
+    await loadCurrentResultPage(requestNumber);
+
+    window.scrollTo({
+      top: 450,
+      behavior: "smooth",
+    });
   });
 
-  nextButton?.addEventListener("click", async () => {
-    const totalPages = Math.ceil(totalPokemon / pageSize);
+  nextButton.addEventListener("click", async () => {
+    const totalPages = Math.ceil(filteredPokemonReferences.length / pageSize);
 
-    if (currentPage < totalPages) {
-      await loadPokemonPage(currentPage + 1);
-
-      window.scrollTo({
-        top: 450,
-        behavior: "smooth",
-      });
+    if (currentPage >= totalPages) {
+      return;
     }
+
+    currentPage += 1;
+    const requestNumber = ++controlRequestNumber;
+
+    await loadCurrentResultPage(requestNumber);
+
+    window.scrollTo({
+      top: 450,
+      behavior: "smooth",
+    });
   });
 
-  searchInput?.addEventListener("input", (event) => {
-    filterPokemon(event.target.value);
+  searchInput.addEventListener("input", () => {
+    window.clearTimeout(searchTimer);
+
+    searchTimer = window.setTimeout(() => {
+      applyExplorerControls(true);
+    }, searchDelay);
   });
 
-  sortSelect?.addEventListener("change", (event) => {
-    sortPokemon(event.target.value);
+  typeFilter.addEventListener("change", () => {
+    applyExplorerControls(true);
   });
 
-  grid?.addEventListener("click", (event) => {
+  generationFilter.addEventListener("change", () => {
+    applyExplorerControls(true);
+  });
+
+  sortSelect.addEventListener("change", () => {
+    applyExplorerControls(false);
+  });
+
+  resetButton.addEventListener("click", resetExplorerControls);
+
+  grid.addEventListener("click", (event) => {
     const teamButton = event.target.closest("[data-team-id]");
 
     const favoriteButton = event.target.closest("[data-favorite-id]");
@@ -342,11 +565,12 @@ function addEventListeners() {
       addPokemonToFavorites(Number(favoriteButton.dataset.favoriteId));
 
       favoriteButton.textContent = "♥";
+
       favoriteButton.classList.add("favorite-button--active");
     }
   });
 
-  teamContainer?.addEventListener("click", (event) => {
+  teamContainer.addEventListener("click", (event) => {
     const removeButton = event.target.closest("[data-remove-team-id]");
 
     if (!removeButton) {
@@ -356,7 +580,7 @@ function addEventListeners() {
     removePokemonFromTeam(Number(removeButton.dataset.removeTeamId));
   });
 
-  quickSaveForm?.addEventListener("submit", saveCurrentTeamFromExplorer);
+  quickSaveForm.addEventListener("submit", saveCurrentTeamFromExplorer);
 }
 
 // Starts the Explorer.
@@ -364,10 +588,19 @@ export async function initializeHome() {
   const grid = document.querySelector("#pokemon-grid");
 
   renderCurrentTeam();
+  configureQuickTeamForm();
   addEventListeners();
 
   try {
-    await loadPokemonPage(1);
+    showExplorerLoading("Preparing Pokémon Explorer...");
+
+    const listData = await getAllPokemonList();
+
+    allPokemonReferences = preparePokemonReferences(listData.results);
+
+    filteredPokemonReferences = [...allPokemonReferences];
+
+    await applyExplorerControls(true);
   } catch (error) {
     console.error(error);
 
