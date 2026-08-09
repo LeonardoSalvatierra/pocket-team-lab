@@ -14,7 +14,7 @@ import {
   updateSavedTeam,
 } from "../services/team-service.js";
 
-import { capitalize } from "../utils.js";
+import { capitalize, showError } from "../utils.js";
 
 const pokemonDetailsCache = new Map();
 const typeDetailsCache = new Map();
@@ -42,22 +42,32 @@ const attackTypes = [
 
 let analysisRequestNumber = 0;
 
-// Gets Pokémon details and reuses previous API results.
+// Gets Pokémon details and removes failed requests from the local cache.
 async function getCachedPokemon(identifier) {
   if (!pokemonDetailsCache.has(identifier)) {
     pokemonDetailsCache.set(identifier, getPokemon(identifier));
   }
 
-  return pokemonDetailsCache.get(identifier);
+  try {
+    return await pokemonDetailsCache.get(identifier);
+  } catch (error) {
+    pokemonDetailsCache.delete(identifier);
+    throw error;
+  }
 }
 
-// Gets type details and reuses previous API results.
+// Gets type details and removes failed requests from the local cache.
 async function getCachedType(typeName) {
   if (!typeDetailsCache.has(typeName)) {
     typeDetailsCache.set(typeName, getPokemonType(typeName));
   }
 
-  return typeDetailsCache.get(typeName);
+  try {
+    return await typeDetailsCache.get(typeName);
+  } catch (error) {
+    typeDetailsCache.delete(typeName);
+    throw error;
+  }
 }
 
 // Updates the counters after the team changes.
@@ -558,11 +568,14 @@ async function renderTeamAnalysis() {
 
     status.textContent = "The analysis could not be loaded.";
 
-    document.querySelector("#team-stat-bars").innerHTML = `
-      <p class="error-message">
-        PokéAPI information is temporarily unavailable.
-      </p>
-    `;
+    showError(
+      document.querySelector("#team-stat-bars"),
+      "PokéAPI information is temporarily unavailable.",
+      {
+        retryLabel: "Retry Analysis",
+        onRetry: renderTeamAnalysis,
+      },
+    );
   }
 }
 

@@ -14,7 +14,7 @@ import {
   getPokemon,
 } from "../services/pokemon-api-service.js";
 
-import { capitalize, formatPokemonNumber } from "../utils.js";
+import { capitalize, formatPokemonNumber, showError } from "../utils.js";
 
 const comparisonStatNames = [
   "hp",
@@ -299,22 +299,29 @@ async function loadComparisonPokemon() {
 
     renderComparisonSlots();
     renderComparisonResults();
+    showComparisonMessage("");
     return;
   }
 
   try {
+    showComparisonMessage("Loading selected Pokémon...");
+
     selectedPokemonDetails = await Promise.all(
       savedComparison.map((pokemon) => getPokemon(pokemon.id)),
     );
 
     renderComparisonSlots();
     renderComparisonResults();
+    showComparisonMessage("");
   } catch (error) {
     console.error("Comparison loading error:", error);
 
-    showComparisonMessage(
-      "The selected Pokémon could not be loaded. Please try again.",
-      false,
+    showError(
+      document.querySelector("#comparison-message"),
+      "The selected Pokémon could not be loaded. Check your connection.",
+      {
+        onRetry: loadComparisonPokemon,
+      },
     );
   }
 }

@@ -23,6 +23,7 @@ import {
   capitalize,
   formatPokemonNumber,
   getCardMarketPrice,
+  showError,
 } from "../utils.js";
 
 let favoritePokemonDetails = [];
@@ -218,9 +219,10 @@ function updateFavoriteCounters() {
     `${cardCount} ${cardCount === 1 ? "saved" : "saved"}`;
 }
 
-// Loads complete information for saved favorites.
+// Loads favorite Pokémon while preserving successful results.
 async function loadFavoritePokemon() {
   const savedFavorites = getFavoritePokemon();
+  const container = document.querySelector("#favorite-pokemon-content");
 
   if (savedFavorites.length === 0) {
     favoritePokemonDetails = [];
@@ -229,18 +231,44 @@ async function loadFavoritePokemon() {
     return;
   }
 
-  try {
-    favoritePokemonDetails = await Promise.all(
-      savedFavorites.map((pokemon) => getPokemon(pokemon.id)),
+  const results = await Promise.allSettled(
+    savedFavorites.map((pokemon) => getPokemon(pokemon.id)),
+  );
+
+  favoritePokemonDetails = results
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value);
+
+  const failedCount = results.filter(
+    (result) => result.status === "rejected",
+  ).length;
+
+  updateFavoriteCounters();
+  renderFavoritePokemon();
+
+  if (failedCount === 0) {
+    showFavoritesMessage("");
+    return;
+  }
+
+  console.error(`${failedCount} favorite Pokémon could not be loaded.`);
+
+  if (favoritePokemonDetails.length === 0) {
+    showError(
+      container,
+      "Favorite Pokémon could not be loaded. Check your connection.",
+      {
+        onRetry: loadFavoritePokemon,
+      },
     );
 
-    updateFavoriteCounters();
-    renderFavoritePokemon();
-  } catch (error) {
-    console.error("Favorites loading error:", error);
-
-    showFavoritesMessage("Some favorite Pokémon could not be loaded.", "error");
+    return;
   }
+
+  showFavoritesMessage(
+    `${failedCount} favorite Pokémon could not be loaded. The remaining favorites are still displayed.`,
+    "error",
+  );
 }
 
 // Removes one favorite.
