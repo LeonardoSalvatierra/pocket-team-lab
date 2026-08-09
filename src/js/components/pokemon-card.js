@@ -1,5 +1,7 @@
 import { isFavoritePokemon } from "../services/favorite-service.js";
 
+import { isPokemonInCurrentTeam } from "../services/team-service.js";
+
 import { capitalize, formatPokemonNumber } from "../utils.js";
 
 // Finds one statistic in a Pokémon object.
@@ -36,6 +38,7 @@ export function createPokemonCard(pokemon) {
     .join("");
 
   const favorite = isFavoritePokemon(pokemon.id);
+  const inTeam = isPokemonInCurrentTeam(pokemon.id);
 
   article.innerHTML = `
     <button
@@ -106,11 +109,14 @@ export function createPokemonCard(pokemon) {
         </a>
 
         <button
-          class="card-button card-button--primary"
+          class="card-button card-button--primary ${
+            inTeam ? "card-button--team-active" : ""
+          }"
           type="button"
           data-team-id="${pokemon.id}"
+          aria-pressed="${inTeam}"
         >
-          + Add to Team
+          ${inTeam ? "✓ In Team" : "+ Add to Team"}
         </button>
       </div>
     </div>

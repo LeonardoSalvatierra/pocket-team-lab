@@ -11,7 +11,9 @@ import {
 import {
   addPokemonToCurrentTeam,
   getCurrentTeam,
+  isPokemonInCurrentTeam,
   maximumTeamSize,
+  removePokemonFromCurrentTeam,
 } from "../services/team-service.js";
 
 import { getDefensiveEffectiveness } from "../services/type-analysis-service.js";
@@ -226,34 +228,57 @@ function showActionMessage(message, successful = true) {
     : "detail-action-message detail-action-message--error";
 }
 
-// Adds the current Pokémon to the active team.
-function addPokemonToTeam(pokemon) {
-  const result = addPokemonToCurrentTeam({
-    id: pokemon.id,
-    name: pokemon.name,
-    image: getPokemonImage(pokemon),
-    types: pokemon.types.map(({ type }) => type.name),
-  });
+// Updates the team button appearance.
+function updateTeamButton(pokemonId) {
+  const button = document.querySelector("#detail-team-button");
 
-  showActionMessage(result.message, result.success);
-
-  if (!result.success) {
+  if (!button) {
     return;
   }
 
-  const headerCounter = document.querySelector("#header-team-count");
+  const inTeam = isPokemonInCurrentTeam(pokemonId);
 
+  button.classList.toggle("detail-action--team-active", inTeam);
+
+  button.textContent = inTeam ? "✓ In Current Team" : "+ Add to Team";
+
+  button.setAttribute("aria-pressed", inTeam.toString());
+}
+
+// Adds or removes the current Pokémon from the active team.
+function togglePokemonTeam(pokemon) {
+  const alreadyInTeam = isPokemonInCurrentTeam(pokemon.id);
+
+  if (alreadyInTeam) {
+    removePokemonFromCurrentTeam(pokemon.id);
+
+    showActionMessage(
+      `${formatName(pokemon.name)} was removed from the team.`,
+      true,
+    );
+  } else {
+    const result = addPokemonToCurrentTeam({
+      id: pokemon.id,
+      name: pokemon.name,
+      image: getPokemonImage(pokemon),
+      types: pokemon.types.map(({ type }) => type.name),
+    });
+
+    showActionMessage(result.message, result.success);
+
+    if (!result.success) {
+      return;
+    }
+  }
+
+  const headerCounter = document.querySelector("#header-team-count");
   const currentTeam = getCurrentTeam();
 
   if (headerCounter) {
     headerCounter.textContent = `${currentTeam.length}/${maximumTeamSize}`;
   }
 
-  const button = document.querySelector("#detail-team-button");
-
-  if (button) {
-    button.textContent = "Added to Team";
-  }
+  updateTeamButton(pokemon.id);
 }
 
 // Updates the comparison controls on Pokémon Details.
@@ -634,12 +659,13 @@ function renderPokemonDetails(pokemon, species, effectiveness) {
   document.title = `${formatName(pokemon.name)} | Pocket Team Lab`;
 
   updateFavoriteButton(pokemon.id);
+  updateTeamButton(pokemon.id);
   updateComparisonControls(pokemon);
 
   document
     .querySelector("#detail-team-button")
     .addEventListener("click", () => {
-      addPokemonToTeam(pokemon);
+      togglePokemonTeam(pokemon);
     });
 
   document

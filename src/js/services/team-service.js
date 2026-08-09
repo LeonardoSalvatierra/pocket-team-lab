@@ -12,6 +12,11 @@ export function getCurrentTeam() {
   return getStorage(storageKeys.currentTeam, []);
 }
 
+// Checks whether one Pokémon is already in the current team.
+export function isPokemonInCurrentTeam(pokemonId) {
+  return getCurrentTeam().some((pokemon) => pokemon.id === Number(pokemonId));
+}
+
 // Returns every saved team.
 export function getSavedTeams() {
   return getStorage(storageKeys.savedTeams, []);

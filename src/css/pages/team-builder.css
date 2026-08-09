@@ -425,13 +425,18 @@
 }
 
 .coverage-item {
+  display: grid;
+  gap: var(--space-xs);
+  padding: 0.7rem;
+  border-radius: var(--radius-small);
+  background: var(--color-surface-light);
+}
+
+.coverage-item__heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  padding: 0.7rem;
-  border-radius: var(--radius-small);
-  background: var(--color-surface-light);
 }
 
 .coverage-item__type {
@@ -439,9 +444,16 @@
   font-weight: 700;
 }
 
-.coverage-item strong {
+.coverage-item__heading strong {
   color: var(--color-text-muted);
   font-size: 0.75rem;
+}
+
+.coverage-item__names {
+  margin: 0;
+  color: var(--color-blue);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .balance-overview {

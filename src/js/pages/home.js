@@ -372,37 +372,60 @@ function showQuickSaveMessage(message, messageType = "") {
   }
 }
 
-// Adds one Pokémon to the current team.
-function addPokemonToTeam(pokemonId) {
+// Adds or removes one Pokémon from the current team.
+function togglePokemonInTeam(pokemonId) {
   const pokemon = loadedPokemon.find((item) => item.id === pokemonId);
 
   if (!pokemon) {
     return;
   }
 
-  const teamPokemon = {
-    id: pokemon.id,
-    name: pokemon.name,
-    image:
-      pokemon.sprites.other["official-artwork"].front_default ||
-      pokemon.sprites.front_default,
-    types: pokemon.types.map(({ type }) => type.name),
-  };
+  const currentTeam = getCurrentTeam();
 
-  const result = addPokemonToCurrentTeam(teamPokemon);
+  const alreadyInTeam = currentTeam.some(
+    (teamPokemon) => teamPokemon.id === pokemonId,
+  );
 
-  if (!result.success) {
-    window.alert(result.message);
-    return;
+  if (alreadyInTeam) {
+    removePokemonFromCurrentTeam(pokemonId);
+
+    showQuickSaveMessage(
+      `${capitalize(pokemon.name)} was removed from the team.`,
+      "success",
+    );
+  } else {
+    const teamPokemon = {
+      id: pokemon.id,
+      name: pokemon.name,
+      image:
+        pokemon.sprites.other["official-artwork"].front_default ||
+        pokemon.sprites.front_default,
+      types: pokemon.types.map(({ type }) => type.name),
+    };
+
+    const result = addPokemonToCurrentTeam(teamPokemon);
+
+    if (!result.success) {
+      showQuickSaveMessage(result.message, "error");
+      return;
+    }
+
+    showQuickSaveMessage(
+      `${capitalize(pokemon.name)} was added to the team.`,
+      "success",
+    );
   }
 
   renderCurrentTeam();
+  renderPokemon(loadedPokemon);
 }
 
 // Removes one Pokémon from the current team.
 function removePokemonFromTeam(pokemonId) {
   removePokemonFromCurrentTeam(pokemonId);
+
   renderCurrentTeam();
+  renderPokemon(loadedPokemon);
 }
 
 // Saves or updates the team from Explorer.
@@ -555,7 +578,7 @@ function addEventListeners() {
     const favoriteButton = event.target.closest("[data-favorite-id]");
 
     if (teamButton) {
-      addPokemonToTeam(Number(teamButton.dataset.teamId));
+      togglePokemonInTeam(Number(teamButton.dataset.teamId));
     }
 
     if (favoriteButton) {

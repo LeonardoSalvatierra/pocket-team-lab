@@ -301,11 +301,13 @@ async function calculateDefensiveCoverage(pokemonDetails) {
 
     Object.entries(multipliers).forEach(([typeName, multiplier]) => {
       if (multiplier > 1) {
-        weaknesses[typeName] = (weaknesses[typeName] ?? 0) + 1;
+        weaknesses[typeName] ??= [];
+        weaknesses[typeName].push(pokemon.name);
       }
 
       if (multiplier < 1) {
-        resistances[typeName] = (resistances[typeName] ?? 0) + 1;
+        resistances[typeName] ??= [];
+        resistances[typeName].push(pokemon.name);
       }
     });
   });
@@ -316,7 +318,7 @@ async function calculateDefensiveCoverage(pokemonDetails) {
   };
 }
 
-// Displays a list of defensive type results.
+// Displays a list of defensive type results and member names.
 function createCoverageList(items, emptyMessage) {
   if (items.length === 0) {
     return `
@@ -330,16 +332,22 @@ function createCoverageList(items, emptyMessage) {
     <div class="coverage-list">
       ${items
         .map(
-          ([typeName, count]) => `
+          ([typeName, members]) => `
             <div class="coverage-item">
-              <span class="coverage-item__type">
-                ${capitalize(typeName)}
-              </span>
+              <div class="coverage-item__heading">
+                <span class="coverage-item__type">
+                  ${capitalize(typeName)}
+                </span>
 
-              <strong>
-                ${count}
-                ${count === 1 ? "member" : "members"}
-              </strong>
+                <strong>
+                  ${members.length}
+                  ${members.length === 1 ? "member" : "members"}
+                </strong>
+              </div>
+
+              <p class="coverage-item__names">
+                ${members.map(capitalize).join(", ")}
+              </p>
             </div>
           `,
         )
@@ -387,8 +395,11 @@ function renderWeaknesses(weaknesses) {
   const container = document.querySelector("#weakness-summary");
 
   const sharedWeaknesses = Object.entries(weaknesses)
-    .filter(([, count]) => count >= 2)
-    .sort(([, firstCount], [, secondCount]) => secondCount - firstCount);
+    .filter(([, members]) => members.length >= 2)
+    .sort(
+      ([, firstMembers], [, secondMembers]) =>
+        secondMembers.length - firstMembers.length,
+    );
 
   container.innerHTML = createCoverageList(
     sharedWeaknesses,
@@ -403,8 +414,11 @@ function renderBalance(team, averages, coverage) {
   const typeCount = Object.keys(getTypeCounts(team)).length;
 
   const seriousWeaknesses = Object.entries(coverage.weaknesses)
-    .filter(([, count]) => count >= 3)
-    .sort(([, firstCount], [, secondCount]) => secondCount - firstCount);
+    .filter(([, members]) => members.length >= 3)
+    .sort(
+      ([, firstMembers], [, secondMembers]) =>
+        secondMembers.length - firstMembers.length,
+    );
 
   const warnings = [];
 
@@ -418,8 +432,11 @@ function renderBalance(team, averages, coverage) {
     warnings.push("The team has limited type diversity.");
   }
 
-  seriousWeaknesses.forEach(([typeName, count]) => {
-    warnings.push(`${count} members are weak to ${capitalize(typeName)}.`);
+  seriousWeaknesses.forEach(([typeName, members]) => {
+    warnings.push(
+      `${members.length} members are weak to ${capitalize(typeName)}: ` +
+        `${members.map(capitalize).join(", ")}.`,
+    );
   });
 
   const statValues = Object.values(averages);
@@ -430,7 +447,10 @@ function renderBalance(team, averages, coverage) {
   }
 
   const strongestResistances = Object.entries(coverage.resistances)
-    .sort(([, firstCount], [, secondCount]) => secondCount - firstCount)
+    .sort(
+      ([, firstMembers], [, secondMembers]) =>
+        secondMembers.length - firstMembers.length,
+    )
     .slice(0, 3);
 
   container.innerHTML = `

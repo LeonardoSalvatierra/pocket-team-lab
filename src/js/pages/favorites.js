@@ -14,7 +14,9 @@ import { getPokemon } from "../services/pokemon-api-service.js";
 import {
   addPokemonToCurrentTeam,
   getCurrentTeam,
+  isPokemonInCurrentTeam,
   maximumTeamSize,
+  removePokemonFromCurrentTeam,
 } from "../services/team-service.js";
 
 import {
@@ -63,6 +65,12 @@ function showFavoritesMessage(message, messageType = "") {
 
 // Creates one favorite Pokémon card.
 function createFavoritePokemonCard(pokemon) {
+  const inTeam = isPokemonInCurrentTeam(pokemon.id);
+
+  const detailsUrl =
+    `${import.meta.env.BASE_URL}` +
+    `pokemon-details/pokemon-details.html?id=${pokemon.id}`;
+
   return `
     <article class="favorite-pokemon-card">
       <button
@@ -75,13 +83,17 @@ function createFavoritePokemonCard(pokemon) {
         ♥
       </button>
 
-      <div class="favorite-pokemon-card__image">
+      <a
+        class="favorite-pokemon-card__image"
+        href="${detailsUrl}"
+        aria-label="View details for ${capitalize(pokemon.name)}"
+      >
         <img
           src="${getPokemonImage(pokemon)}"
           alt="${capitalize(pokemon.name)}"
           loading="lazy"
         />
-      </div>
+      </a>
 
       <div class="favorite-pokemon-card__content">
         <div class="favorite-pokemon-card__heading">
@@ -89,7 +101,11 @@ function createFavoritePokemonCard(pokemon) {
             ${formatPokemonNumber(pokemon.id)}
           </span>
 
-          <h2>${capitalize(pokemon.name)}</h2>
+          <h2>
+            <a href="${detailsUrl}">
+              ${capitalize(pokemon.name)}
+            </a>
+          </h2>
         </div>
 
         <div class="pokemon-types">
@@ -99,17 +115,20 @@ function createFavoritePokemonCard(pokemon) {
         <div class="favorite-pokemon-card__actions">
           <a
             class="button button--secondary"
-            href="${import.meta.env.BASE_URL}pokemon-details/pokemon-details.html?id=${pokemon.id}"
+            href="${detailsUrl}"
           >
             View Details
           </a>
 
           <button
-            class="button button--primary"
+            class="button ${
+              inTeam ? "favorite-team-button--active" : "button--primary"
+            }"
             type="button"
             data-add-favorite-team="${pokemon.id}"
+            aria-pressed="${inTeam}"
           >
-            + Add to Team
+            ${inTeam ? "✓ In Team" : "+ Add to Team"}
           </button>
         </div>
       </div>
@@ -246,34 +265,47 @@ function removePokemonFavorite(pokemonId) {
   }
 }
 
-// Adds one favorite Pokémon to the current team.
-function addFavoriteToTeam(pokemonId) {
+// Adds or removes one favorite Pokémon from the current team.
+function toggleFavoriteTeamPokemon(pokemonId) {
   const pokemon = favoritePokemonDetails.find((item) => item.id === pokemonId);
 
   if (!pokemon) {
     return;
   }
 
-  const result = addPokemonToCurrentTeam({
-    id: pokemon.id,
-    name: pokemon.name,
-    image: getPokemonImage(pokemon),
-    types: pokemon.types.map(({ type }) => type.name),
-  });
+  const alreadyInTeam = isPokemonInCurrentTeam(pokemonId);
 
-  showFavoritesMessage(result.message, result.success ? "success" : "error");
+  if (alreadyInTeam) {
+    removePokemonFromCurrentTeam(pokemonId);
 
-  if (!result.success) {
-    return;
+    showFavoritesMessage(
+      `${capitalize(pokemon.name)} was removed from the team.`,
+      "success",
+    );
+  } else {
+    const result = addPokemonToCurrentTeam({
+      id: pokemon.id,
+      name: pokemon.name,
+      image: getPokemonImage(pokemon),
+      types: pokemon.types.map(({ type }) => type.name),
+    });
+
+    showFavoritesMessage(result.message, result.success ? "success" : "error");
+
+    if (!result.success) {
+      return;
+    }
   }
 
-  const headerCounter = document.querySelector("#header-team-count");
-
   const currentTeam = getCurrentTeam();
+
+  const headerCounter = document.querySelector("#header-team-count");
 
   if (headerCounter) {
     headerCounter.textContent = `${currentTeam.length}/${maximumTeamSize}`;
   }
+
+  renderFavoritePokemon();
 }
 
 // Switches between Pokémon, both, and card favorites.
@@ -361,7 +393,7 @@ function addFavoritesListeners() {
     }
 
     if (teamButton) {
-      addFavoriteToTeam(Number(teamButton.dataset.addFavoriteTeam));
+      toggleFavoriteTeamPokemon(Number(teamButton.dataset.addFavoriteTeam));
     }
   });
 }

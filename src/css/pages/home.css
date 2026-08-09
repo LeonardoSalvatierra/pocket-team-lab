@@ -270,6 +270,22 @@
   color: var(--color-primary);
 }
 
+.card-button--team-active {
+  border-color: rgba(32, 200, 117, 0.45);
+  background: rgba(32, 200, 117, 0.12);
+  color: var(--color-green);
+}
+
+.card-button--team-active:hover {
+  border-color: var(--color-primary);
+  background: rgba(255, 65, 75, 0.12);
+  color: var(--color-primary);
+}
+
+.card-button--team-active:hover::after {
+  content: "";
+}
+
 .pagination {
   display: flex;
   align-items: center;
