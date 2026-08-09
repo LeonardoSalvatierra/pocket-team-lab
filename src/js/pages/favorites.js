@@ -178,15 +178,25 @@ function renderFavoritePokemon() {
   container.innerHTML = filteredPokemon.map(createFavoritePokemonCard).join("");
 }
 
-// Updates favorite counters.
+// Updates all favorite counters.
 function updateFavoriteCounters() {
   const favoriteCards = getFavoriteCards();
 
-  document.querySelector("#favorite-pokemon-count").textContent =
-    favoritePokemonDetails.length;
+  const pokemonCount = favoritePokemonDetails.length;
+  const cardCount = favoriteCards.length;
+  const totalCount = pokemonCount + cardCount;
 
-  document.querySelector("#favorite-card-count").textContent =
-    favoriteCards.length;
+  document.querySelector("#favorite-pokemon-count").textContent = pokemonCount;
+
+  document.querySelector("#favorite-card-count").textContent = cardCount;
+
+  document.querySelector("#favorite-total-count").textContent = totalCount;
+
+  document.querySelector("#favorite-pokemon-section-count").textContent =
+    `${pokemonCount} ${pokemonCount === 1 ? "saved" : "saved"}`;
+
+  document.querySelector("#favorite-card-section-count").textContent =
+    `${cardCount} ${cardCount === 1 ? "saved" : "saved"}`;
 }
 
 // Loads complete information for saved favorites.
@@ -266,14 +276,14 @@ function addFavoriteToTeam(pokemonId) {
   }
 }
 
-// Switches between Pokémon and card favorites.
+// Switches between Pokémon, both, and card favorites.
 function changeFavoritesTab(tabName) {
   const pokemonSection = document.querySelector("#favorite-pokemon-section");
 
   const cardsSection = document.querySelector("#favorite-cards-section");
 
-  pokemonSection.hidden = tabName !== "pokemon";
-  cardsSection.hidden = tabName !== "cards";
+  pokemonSection.hidden = tabName === "cards";
+  cardsSection.hidden = tabName === "pokemon";
 
   document.querySelectorAll("[data-favorites-tab]").forEach((button) => {
     const active = button.dataset.favoritesTab === tabName;

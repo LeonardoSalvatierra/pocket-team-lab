@@ -19,6 +19,10 @@ export function createPokemonCard(pokemon) {
     pokemon.sprites.other["official-artwork"].front_default ||
     pokemon.sprites.front_default;
 
+  const detailsUrl =
+    `${import.meta.env.BASE_URL}` +
+    `pokemon-details/pokemon-details.html?id=${pokemon.id}`;
+
   const types = pokemon.types
     .map(
       ({ type }) => `
@@ -46,12 +50,18 @@ export function createPokemonCard(pokemon) {
       ${favorite ? "♥" : "♡"}
     </button>
 
-    <img
-      class="pokemon-card__image"
-      src="${image}"
-      alt="${capitalize(pokemon.name)}"
-      loading="lazy"
-    />
+    <a
+      class="pokemon-card__image-link"
+      href="${detailsUrl}"
+      aria-label="View details for ${capitalize(pokemon.name)}"
+    >
+      <img
+        class="pokemon-card__image"
+        src="${image}"
+        alt="${capitalize(pokemon.name)}"
+        loading="lazy"
+      />
+    </a>
 
     <div class="pokemon-card__content">
       <div class="pokemon-card__heading">
@@ -59,7 +69,11 @@ export function createPokemonCard(pokemon) {
           ${formatPokemonNumber(pokemon.id)}
         </span>
 
-        <h3>${capitalize(pokemon.name)}</h3>
+        <h3>
+          <a href="${detailsUrl}">
+            ${capitalize(pokemon.name)}
+          </a>
+        </h3>
       </div>
 
       <div class="pokemon-types">
@@ -86,7 +100,7 @@ export function createPokemonCard(pokemon) {
       <div class="pokemon-card__actions">
         <a
           class="card-button"
-          href="${import.meta.env.BASE_URL}pokemon-details/pokemon-details.html?id=${pokemon.id}"
+          href="${detailsUrl}"
         >
           View Details
         </a>

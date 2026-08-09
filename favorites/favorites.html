@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="/src/css/styles.css" />
     <link rel="stylesheet" href="/src/css/pages/cards.css" />
     <link rel="stylesheet" href="/src/css/pages/favorites.css" />
-
     <link rel="stylesheet" href="/src/css/responsive.css" />
   </head>
 
@@ -38,14 +37,25 @@
 
       <nav class="favorites-tabs" aria-label="Favorite categories">
         <button
-          class="favorites-tab favorites-tab--active"
+          class="favorites-tab"
           type="button"
           data-favorites-tab="pokemon"
-          aria-pressed="true"
+          aria-pressed="false"
         >
           Pokémon
 
           <span id="favorite-pokemon-count">0</span>
+        </button>
+
+        <button
+          class="favorites-tab favorites-tab--active"
+          type="button"
+          data-favorites-tab="both"
+          aria-pressed="true"
+        >
+          Both
+
+          <span id="favorite-total-count">0</span>
         </button>
 
         <button
@@ -60,7 +70,23 @@
         </button>
       </nav>
 
+      <p
+        id="favorites-message"
+        class="favorites-message"
+        aria-live="polite"
+      ></p>
+
       <section id="favorite-pokemon-section" class="favorites-section">
+        <header class="favorites-category-heading">
+          <div>
+            <p>Favorite Collection</p>
+
+            <h2>Pokémon</h2>
+          </div>
+
+          <span id="favorite-pokemon-section-count">0 saved</span>
+        </header>
+
         <div class="favorites-toolbar">
           <label class="favorites-search">
             <span aria-hidden="true">⌕</span>
@@ -68,7 +94,7 @@
             <input
               id="favorite-search"
               type="search"
-              placeholder="Search favorites..."
+              placeholder="Search favorite Pokémon..."
             />
           </label>
 
@@ -79,22 +105,26 @@
           </select>
         </div>
 
-        <p
-          id="favorites-message"
-          class="favorites-message"
-          aria-live="polite"
-        ></p>
-
         <div
           id="favorite-pokemon-content"
           class="favorite-pokemon-grid"
           aria-live="polite"
         >
-          <p class="loading-message">Loading favorites...</p>
+          <p class="loading-message">Loading favorite Pokémon...</p>
         </div>
       </section>
 
-      <section id="favorite-cards-section" class="favorites-section" hidden>
+      <section id="favorite-cards-section" class="favorites-section">
+        <header class="favorites-category-heading">
+          <div>
+            <p>Favorite Collection</p>
+
+            <h2>Trading Cards</h2>
+          </div>
+
+          <span id="favorite-card-section-count">0 saved</span>
+        </header>
+
         <div class="favorites-toolbar">
           <label class="favorites-search">
             <span aria-hidden="true">⌕</span>

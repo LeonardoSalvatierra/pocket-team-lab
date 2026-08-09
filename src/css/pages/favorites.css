@@ -31,21 +31,30 @@
   color: var(--color-text-soft);
 }
 
-/* Category tabs */
+/* Favorite category tabs */
 
 .favorites-tabs {
   display: flex;
-  gap: var(--space-sm);
-  border-bottom: 1px solid var(--color-border);
+  width: fit-content;
+  max-width: 100%;
+  justify-self: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
 }
 
 .favorites-tab {
   display: flex;
+  min-height: 46px;
   align-items: center;
+  justify-content: center;
   gap: var(--space-sm);
-  padding: 0.85rem 1.1rem;
+  padding: 0.7rem 1.2rem;
   border: 0;
-  border-bottom: 3px solid transparent;
+  border-radius: 999px;
   background: transparent;
   color: var(--color-text-muted);
   font-weight: 700;
@@ -61,9 +70,17 @@
   font-size: 0.7rem;
 }
 
+.favorites-tab:hover {
+  color: var(--color-text);
+}
+
 .favorites-tab--active {
-  border-bottom-color: var(--color-primary);
+  background: rgba(255, 65, 75, 0.13);
   color: var(--color-primary);
+}
+
+.favorites-tab--active span {
+  background: rgba(255, 65, 75, 0.18);
 }
 
 /* Search and sorting */
@@ -71,6 +88,42 @@
 .favorites-section {
   display: grid;
   gap: var(--space-lg);
+}
+
+.favorites-section[hidden] {
+  display: none;
+}
+
+.favorites-section + .favorites-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.favorites-category-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.favorites-category-heading p {
+  margin: 0 0 var(--space-xs);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.favorites-category-heading h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+
+.favorites-category-heading > span {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
 }
 
 .favorites-toolbar {
@@ -297,11 +350,27 @@
     grid-template-columns: 1fr;
   }
 
+  .favorites-tabs {
+    width: 100%;
+  }
+
   .favorites-tab {
     flex: 1;
-    justify-content: center;
-    padding-inline: var(--space-xs);
-    font-size: 0.78rem;
+    min-width: 0;
+    gap: 0.3rem;
+    padding-inline: 0.35rem;
+    font-size: 0.72rem;
+  }
+
+  .favorites-tab span {
+    min-width: 22px;
+    height: 22px;
+  }
+
+  .favorites-category-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-xs);
   }
 }
 
