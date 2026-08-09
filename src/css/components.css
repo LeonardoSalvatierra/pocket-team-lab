@@ -168,10 +168,23 @@
 }
 
 .error-message {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-md);
   padding: var(--space-lg);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-medium);
   color: var(--color-primary);
+}
+
+.error-message p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.error-message__retry:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .mobile-navigation {

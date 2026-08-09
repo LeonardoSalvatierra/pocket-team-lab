@@ -713,9 +713,15 @@ async function renderSelectedPokemon() {
 
     renderPokemonDetails(pokemon, species, effectiveness);
   } catch (error) {
-    console.error(error);
+    console.error("Pokémon details loading error:", error);
 
-    showError(container, "The Pokémon information could not be loaded.");
+    showError(
+      container,
+      "The Pokémon information could not be loaded. Check your connection.",
+      {
+        onRetry: renderSelectedPokemon,
+      },
+    );
   }
 }
 

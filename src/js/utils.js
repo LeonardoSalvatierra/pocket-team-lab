@@ -15,17 +15,50 @@ export function getQueryParameter(parameterName) {
   const parameters = new URLSearchParams(window.location.search);
   return parameters.get(parameterName);
 }
-// Displays an error message inside the selected container.
-export function showError(container, message) {
+// Displays an error and optionally provides a retry button.
+export function showError(
+  container,
+  message,
+  { retryLabel = "Try Again", onRetry = null } = {},
+) {
   if (!container) {
     return;
   }
 
-  container.innerHTML = `
-    <div class="error-message" role="alert">
-      <p>${message}</p>
-    </div>
-  `;
+  const errorElement = document.createElement("div");
+  errorElement.className = "error-message";
+  errorElement.setAttribute("role", "alert");
+
+  const messageElement = document.createElement("p");
+  messageElement.textContent = message;
+
+  errorElement.appendChild(messageElement);
+
+  if (typeof onRetry === "function") {
+    const retryButton = document.createElement("button");
+
+    retryButton.className = "button button--primary error-message__retry";
+    retryButton.type = "button";
+    retryButton.textContent = retryLabel;
+
+    retryButton.addEventListener("click", async () => {
+      retryButton.disabled = true;
+      retryButton.textContent = "Retrying...";
+
+      try {
+        await onRetry();
+      } finally {
+        if (retryButton.isConnected) {
+          retryButton.disabled = false;
+          retryButton.textContent = retryLabel;
+        }
+      }
+    });
+
+    errorElement.appendChild(retryButton);
+  }
+
+  container.replaceChildren(errorElement);
 }
 // Finds the lowest available market price for one card.
 export function getCardMarketPrice(card) {

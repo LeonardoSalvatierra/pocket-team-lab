@@ -271,7 +271,10 @@ async function applyExplorerControls(resetPage = true) {
     if (requestNumber === controlRequestNumber) {
       showError(
         document.querySelector("#pokemon-grid"),
-        "The filters could not be applied.",
+        "The Pokémon results could not be loaded. Check your connection.",
+        {
+          onRetry: () => applyExplorerControls(false),
+        },
       );
     }
   }
@@ -602,13 +605,9 @@ function addEventListeners() {
   quickSaveForm.addEventListener("submit", saveCurrentTeamFromExplorer);
 }
 
-// Starts the Explorer.
-export async function initializeHome() {
+// Loads the Pokémon list used by Explorer.
+async function loadExplorerData() {
   const grid = document.querySelector("#pokemon-grid");
-
-  renderCurrentTeam();
-  configureQuickTeamForm();
-  addEventListeners();
 
   try {
     showExplorerLoading("Preparing Pokémon Explorer...");
@@ -621,8 +620,19 @@ export async function initializeHome() {
 
     await applyExplorerControls(true);
   } catch (error) {
-    console.error(error);
+    console.error("Explorer loading error:", error);
 
-    showError(grid, "Pokémon could not be loaded. Please try again.");
+    showError(grid, "Pokémon could not be loaded. Check your connection.", {
+      onRetry: loadExplorerData,
+    });
   }
+}
+
+// Starts the Explorer.
+export async function initializeHome() {
+  renderCurrentTeam();
+  configureQuickTeamForm();
+  addEventListeners();
+
+  await loadExplorerData();
 }
