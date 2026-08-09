@@ -357,6 +357,33 @@
   color: var(--color-text-muted);
 }
 
+/* Trading card request states */
+
+#cards-content[aria-busy="true"] {
+  cursor: progress;
+}
+
+#cards-content[aria-busy="true"] .tcg-card {
+  opacity: 0.72;
+}
+
+.card-filter-control select:disabled,
+.card-results__toolbar select:disabled,
+.card-pagination button:disabled,
+#reset-card-filters:disabled {
+  cursor: wait;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards-loading__spinner {
+    animation: none;
+  }
+
+  .tcg-card__image {
+    transition: none;
+  }
+}
+
 /* Responsive Cards page */
 
 @media (max-width: 900px) {

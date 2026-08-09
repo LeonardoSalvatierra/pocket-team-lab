@@ -1,9 +1,71 @@
 const baseUrl = "https://api.pokemontcg.io/v2";
 
-const metadataDuration = 7 * 24 * 60 * 60 * 1000;
+const metadataDuration = 30 * 24 * 60 * 60 * 1000;
+const cardResultFreshDuration = 30 * 60 * 1000;
+const cardResultStaleDuration = 7 * 24 * 60 * 60 * 1000;
 
+const cardResultStorageKey = "pocket-tcg-card-results";
+const maximumCachedResults = 6;
+
+const activeRequests = new Map();
 const memoryPromises = new Map();
 const cardCache = new Map();
+
+const fallbackTypes = [
+  "Colorless",
+  "Darkness",
+  "Dragon",
+  "Fairy",
+  "Fighting",
+  "Fire",
+  "Grass",
+  "Lightning",
+  "Metal",
+  "Psychic",
+  "Water",
+];
+
+const fallbackSupertypes = ["Energy", "Pokémon", "Trainer"];
+
+const fallbackSubtypes = [
+  "Basic",
+  "Stage 1",
+  "Stage 2",
+  "Item",
+  "Supporter",
+  "Stadium",
+  "Tool",
+  "Special",
+  "Technical Machine",
+  "EX",
+  "GX",
+  "V",
+  "VMAX",
+  "VSTAR",
+  "Radiant",
+  "ACE SPEC",
+];
+
+const fallbackRarities = [
+  "Common",
+  "Uncommon",
+  "Rare",
+  "Rare Holo",
+  "Rare Holo EX",
+  "Rare Holo GX",
+  "Rare Holo V",
+  "Rare Holo VMAX",
+  "Rare Holo VSTAR",
+  "Rare Ultra",
+  "Rare Secret",
+  "Rare Rainbow",
+  "Rare Shiny",
+  "Rare Shining",
+  "Illustration Rare",
+  "Special Illustration Rare",
+  "Hyper Rare",
+  "Promo",
+];
 
 // Waits before retrying a failed request.
 function wait(milliseconds) {
@@ -12,49 +74,8 @@ function wait(milliseconds) {
   });
 }
 
-// Reads API metadata cached in localStorage.
-function readMetadataCache(cacheKey) {
-  try {
-    const storedValue = localStorage.getItem(cacheKey);
-
-    if (!storedValue) {
-      return null;
-    }
-
-    const cachedInformation = JSON.parse(storedValue);
-
-    const expired = Date.now() - cachedInformation.savedAt > metadataDuration;
-
-    if (expired) {
-      localStorage.removeItem(cacheKey);
-      return null;
-    }
-
-    return cachedInformation.data;
-  } catch (error) {
-    console.error(`Could not read ${cacheKey}`, error);
-
-    return null;
-  }
-}
-
-// Saves API metadata in localStorage.
-function saveMetadataCache(cacheKey, data) {
-  try {
-    localStorage.setItem(
-      cacheKey,
-      JSON.stringify({
-        savedAt: Date.now(),
-        data,
-      }),
-    );
-  } catch (error) {
-    console.error(`Could not save ${cacheKey}`, error);
-  }
-}
-
-// Sends a request with timeout and automatic retries.
-async function request(endpoint, { retries = 2, timeout = 15000 } = {}) {
+// Sends one API request with timeout and retries.
+async function performRequest(endpoint, { retries = 2, timeout = 25000 } = {}) {
   let lastError = null;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -85,13 +106,21 @@ async function request(endpoint, { retries = 2, timeout = 15000 } = {}) {
         throw error;
       }
 
-      const retryAfter = Number(response.headers.get("Retry-After")) * 1000;
+      const retryAfterHeader = response.headers.get("Retry-After");
 
-      const delay = Number.isFinite(retryAfter)
-        ? Math.min(retryAfter, 5000)
-        : 700 * 2 ** attempt;
+      const retryAfter = retryAfterHeader
+        ? Number(retryAfterHeader) * 1000
+        : null;
+
+      const delay =
+        typeof retryAfter === "number" &&
+        Number.isFinite(retryAfter) &&
+        retryAfter > 0
+          ? Math.min(retryAfter, 12000)
+          : Math.min(1200 * 2 ** attempt, 8000);
 
       lastError = error;
+
       await wait(delay);
     } catch (error) {
       lastError = error;
@@ -105,13 +134,166 @@ async function request(endpoint, { retries = 2, timeout = 15000 } = {}) {
         throw error;
       }
 
-      await wait(700 * 2 ** attempt);
+      await wait(Math.min(1200 * 2 ** attempt, 8000));
     } finally {
       window.clearTimeout(timeoutId);
     }
   }
 
   throw lastError;
+}
+
+// Prevents identical requests from running simultaneously.
+function request(endpoint, options = {}) {
+  if (activeRequests.has(endpoint)) {
+    return activeRequests.get(endpoint);
+  }
+
+  const requestPromise = performRequest(endpoint, options).finally(() => {
+    activeRequests.delete(endpoint);
+  });
+
+  activeRequests.set(endpoint, requestPromise);
+
+  return requestPromise;
+}
+
+// Reads metadata and supports both old and new cache formats.
+function readMetadataCache(cacheKey) {
+  try {
+    const storedValue = localStorage.getItem(cacheKey);
+
+    if (!storedValue) {
+      return null;
+    }
+
+    const cachedInformation = JSON.parse(storedValue);
+
+    const cachedData = Array.isArray(cachedInformation.data)
+      ? cachedInformation.data
+      : cachedInformation.data?.data;
+
+    if (!Array.isArray(cachedData)) {
+      localStorage.removeItem(cacheKey);
+
+      return null;
+    }
+
+    return {
+      data: cachedData,
+      expired: Date.now() - cachedInformation.savedAt > metadataDuration,
+    };
+  } catch (error) {
+    console.error(`Could not read ${cacheKey}`, error);
+
+    localStorage.removeItem(cacheKey);
+
+    return null;
+  }
+}
+
+// Saves API metadata in localStorage.
+function saveMetadataCache(cacheKey, data) {
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      }),
+    );
+  } catch (error) {
+    console.error(`Could not save ${cacheKey}`, error);
+  }
+}
+
+// Reads all cached card result pages.
+function readCardResultCache() {
+  try {
+    const storedValue = localStorage.getItem(cardResultStorageKey);
+
+    if (!storedValue) {
+      return [];
+    }
+
+    const entries = JSON.parse(storedValue);
+
+    return Array.isArray(entries) ? entries : [];
+  } catch (error) {
+    console.error("Could not read cached trading cards.", error);
+
+    return [];
+  }
+}
+
+// Saves one card result page and removes older entries.
+function saveCardResultCache(endpoint, response) {
+  try {
+    const previousEntries = readCardResultCache().filter(
+      (entry) => entry.endpoint !== endpoint,
+    );
+
+    previousEntries.unshift({
+      endpoint,
+      savedAt: Date.now(),
+      response,
+    });
+
+    localStorage.setItem(
+      cardResultStorageKey,
+      JSON.stringify(previousEntries.slice(0, maximumCachedResults)),
+    );
+  } catch (error) {
+    console.error("Could not cache trading cards.", error);
+  }
+}
+
+// Finds one cached card result page.
+function findCachedCardResult(endpoint) {
+  const entry = readCardResultCache().find(
+    (cachedEntry) => cachedEntry.endpoint === endpoint,
+  );
+
+  if (!entry) {
+    return null;
+  }
+
+  return {
+    ...entry,
+    age: Date.now() - entry.savedAt,
+  };
+}
+
+// Requests cards while using fresh and stale cache safely.
+async function requestCardResults(endpoint) {
+  const cachedResult = findCachedCardResult(endpoint);
+
+  if (cachedResult && cachedResult.age <= cardResultFreshDuration) {
+    return {
+      ...cachedResult.response,
+      cacheStatus: "fresh",
+    };
+  }
+
+  try {
+    const response = await request(endpoint);
+
+    saveCardResultCache(endpoint, response);
+
+    return {
+      ...response,
+      cacheStatus: "network",
+    };
+  } catch (error) {
+    if (cachedResult && cachedResult.age <= cardResultStaleDuration) {
+      return {
+        ...cachedResult.response,
+        cacheStatus: "stale",
+      };
+    }
+
+    throw error;
+  }
 }
 
 // Escapes Lucene search characters.
@@ -122,12 +304,15 @@ function escapeSearchValue(value) {
     .replace(/\s+/g, "*");
 }
 
-// Reads metadata from cache or API.
-async function getMetadata(cacheKey, endpoint) {
-  const cachedData = readMetadataCache(cacheKey);
+// Reads metadata from cache, API, or local fallback values.
+async function getMetadata(cacheKey, endpoint, fallbackData = []) {
+  const cachedInformation = readMetadataCache(cacheKey);
 
-  if (cachedData) {
-    return cachedData;
+  if (cachedInformation && !cachedInformation.expired) {
+    return {
+      data: cachedInformation.data,
+      source: "cache",
+    };
   }
 
   if (!memoryPromises.has(cacheKey)) {
@@ -137,12 +322,26 @@ async function getMetadata(cacheKey, endpoint) {
   try {
     const response = await memoryPromises.get(cacheKey);
 
-    saveMetadataCache(cacheKey, response);
+    saveMetadataCache(cacheKey, response.data);
 
-    return response;
-  } catch (error) {
+    return {
+      data: response.data,
+      source: "network",
+    };
+  } catch {
     memoryPromises.delete(cacheKey);
-    throw error;
+
+    if (cachedInformation?.data?.length > 0) {
+      return {
+        data: cachedInformation.data,
+        source: "stale",
+      };
+    }
+
+    return {
+      data: fallbackData,
+      source: fallbackData.length > 0 ? "fallback" : "unavailable",
+    };
   }
 }
 
@@ -198,7 +397,7 @@ export async function searchCards({
     parameters.set("q", queryParts.join(" "));
   }
 
-  return request(`/cards?${parameters.toString()}`);
+  return requestCardResults(`/cards?${parameters.toString()}`);
 }
 
 // Gets one complete card.
@@ -211,34 +410,40 @@ export async function getCard(cardId) {
     return await cardCache.get(cardId);
   } catch (error) {
     cardCache.delete(cardId);
+
     throw error;
   }
 }
 
-// Gets energy types.
+// Gets energy types with local fallback options.
 export function getCardTypes() {
-  return getMetadata("pocket-tcg-types", "/types");
+  return getMetadata("pocket-tcg-types", "/types", fallbackTypes);
 }
 
-// Gets card rarities.
+// Gets card rarities with local fallback options.
 export function getCardRarities() {
-  return getMetadata("pocket-tcg-rarities", "/rarities");
+  return getMetadata("pocket-tcg-rarities", "/rarities", fallbackRarities);
 }
 
-// Gets card sets.
+// Gets card sets and reuses expired cache if necessary.
 export function getCardSets() {
   return getMetadata(
     "pocket-tcg-sets",
     "/sets?pageSize=250&orderBy=-releaseDate",
+    [],
   );
 }
 
-// Gets card supertypes.
+// Gets card supertypes with local fallback options.
 export function getCardSupertypes() {
-  return getMetadata("pocket-tcg-supertypes", "/supertypes");
+  return getMetadata(
+    "pocket-tcg-supertypes",
+    "/supertypes",
+    fallbackSupertypes,
+  );
 }
 
-// Gets card subtypes.
+// Gets card subtypes with local fallback options.
 export function getCardSubtypes() {
-  return getMetadata("pocket-tcg-subtypes", "/subtypes");
+  return getMetadata("pocket-tcg-subtypes", "/subtypes", fallbackSubtypes);
 }

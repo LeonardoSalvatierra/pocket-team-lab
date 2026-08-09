@@ -16,15 +16,16 @@ import {
 import { getCardMarketPrice } from "../utils.js";
 
 const pageSize = 24;
-const searchDelay = 450;
+const searchDelay = 650;
 
 let currentPage = 1;
 let totalPages = 1;
 let loadedCards = [];
 let searchTimer = null;
 let requestNumber = 0;
+let cardsAreLoading = false;
 
-// Adds API values to a select.
+// Adds API values to a select without duplicating options.
 function populateSelect(
   selector,
   values,
@@ -32,6 +33,8 @@ function populateSelect(
   getLabel = (value) => value,
 ) {
   const select = document.querySelector(selector);
+
+  select.options.length = 1;
 
   values.forEach((value) => {
     const option = document.createElement("option");
@@ -55,7 +58,34 @@ function showCardsMessage(message, messageType = "") {
   }
 }
 
-// Loads filter catalogs separately.
+// Enables or disables controls during an important request.
+function setCardControlsDisabled(disabled) {
+  cardsAreLoading = disabled;
+
+  [
+    "#card-supertype-filter",
+    "#card-subtype-filter",
+    "#card-type-filter",
+    "#card-rarity-filter",
+    "#card-set-filter",
+    "#card-sort",
+    "#reset-card-filters",
+    "#previous-card-page",
+    "#next-card-page",
+  ].forEach((selector) => {
+    const control = document.querySelector(selector);
+
+    if (control) {
+      control.disabled = disabled;
+    }
+  });
+
+  document
+    .querySelector("#cards-content")
+    .setAttribute("aria-busy", disabled.toString());
+}
+
+// Loads filter catalogs and accepts cached fallback options.
 async function loadCardFilterOptions() {
   const filters = [
     {
@@ -82,7 +112,8 @@ async function loadCardFilterOptions() {
     },
   ];
 
-  let failedFilters = 0;
+  let backupFilters = 0;
+  let unavailableFilters = 0;
 
   for (const filter of filters) {
     try {
@@ -94,23 +125,38 @@ async function loadCardFilterOptions() {
         filter.getValue,
         filter.getLabel,
       );
+
+      if (response.source === "fallback" || response.source === "stale") {
+        backupFilters += 1;
+      }
+
+      if (response.source === "unavailable") {
+        unavailableFilters += 1;
+      }
     } catch (error) {
-      failedFilters += 1;
+      unavailableFilters += 1;
+
       console.error("Card filter error:", error);
     }
   }
 
-  if (failedFilters > 0) {
+  if (unavailableFilters > 0) {
     showCardsMessage(
-      `${failedFilters} filter ${
-        failedFilters === 1 ? "option was" : "options were"
-      } unavailable. Cards can still be explored.`,
+      `${unavailableFilters} filter ${
+        unavailableFilters === 1 ? "catalog is" : "catalogs are"
+      } temporarily unavailable. Cards can still be explored.`,
       "error",
     );
+
+    return;
+  }
+
+  if (backupFilters > 0) {
+    showCardsMessage("Some filter options were loaded from saved backup data.");
   }
 }
 
-// Displays card loading state.
+// Displays the initial card loading state.
 function showCardsLoading() {
   document.querySelector("#cards-content").innerHTML = `
     <div class="cards-loading">
@@ -124,7 +170,7 @@ function showCardsLoading() {
   `;
 }
 
-// Displays a retryable error.
+// Displays a retryable error when no previous cards exist.
 function showCardsError(message) {
   document.querySelector("#cards-content").innerHTML = `
     <div class="cards-request-error">
@@ -153,7 +199,6 @@ function sortCardsByVisiblePrice(cards, sortValue) {
 
   return [...cards].sort((first, second) => {
     const firstPrice = getCardMarketPrice(first);
-
     const secondPrice = getCardMarketPrice(second);
 
     if (firstPrice === null) {
@@ -180,7 +225,9 @@ function renderCards(cards) {
     container.innerHTML = `
       <div class="cards-empty">
         <span aria-hidden="true">◇</span>
+
         <h2>No cards found</h2>
+
         <p>Try another search or filter.</p>
       </div>
     `;
@@ -240,11 +287,12 @@ function getCardControlValues() {
     setId: document.querySelector("#card-set-filter").value,
 
     sortValue,
+
     orderBy: getApiOrder(sortValue),
   };
 }
 
-// Loads one page of cards.
+// Loads one page while preserving previous cards on failure.
 async function loadCards(resetPage = false) {
   if (resetPage) {
     currentPage = 1;
@@ -252,8 +300,15 @@ async function loadCards(resetPage = false) {
 
   const currentRequest = ++requestNumber;
   const controls = getCardControlValues();
+  const hasPreviousCards = loadedCards.length > 0;
 
-  showCardsLoading();
+  if (!hasPreviousCards) {
+    showCardsLoading();
+  } else {
+    showCardsMessage("Updating trading cards...");
+  }
+
+  setCardControlsDisabled(true);
 
   try {
     const response = await searchCards({
@@ -270,6 +325,17 @@ async function loadCards(resetPage = false) {
 
     renderCards(loadedCards);
     updateCardPagination(response);
+
+    if (response.cacheStatus === "stale") {
+      showCardsMessage(
+        "The API is temporarily unavailable. Showing recently saved results.",
+        "error",
+      );
+    } else if (response.cacheStatus === "fresh") {
+      showCardsMessage("Loaded quickly from saved results.");
+    } else {
+      showCardsMessage("");
+    }
   } catch (error) {
     console.error("Trading cards error:", error);
 
@@ -277,11 +343,23 @@ async function loadCards(resetPage = false) {
       return;
     }
 
-    showCardsError(
+    const errorMessage =
       error.status === 429
-        ? "The API request limit was reached. Wait a moment and retry."
-        : "The external service may be temporarily unavailable.",
-    );
+        ? "The API request limit was reached. Wait a moment before retrying."
+        : "The external card service is temporarily unavailable.";
+
+    if (hasPreviousCards) {
+      showCardsMessage(
+        `${errorMessage} Previous results are still displayed.`,
+        "error",
+      );
+    } else {
+      showCardsError(errorMessage);
+    }
+  } finally {
+    if (currentRequest === requestNumber) {
+      setCardControlsDisabled(false);
+    }
   }
 }
 
@@ -306,6 +384,10 @@ function toggleCardFavorite(cardId, button) {
 
 // Resets all controls.
 async function resetCardControls() {
+  if (cardsAreLoading) {
+    return;
+  }
+
   document.querySelector("#card-search").value = "";
 
   [
@@ -344,7 +426,9 @@ function addCardListeners() {
     "#card-sort",
   ].forEach((selector) => {
     document.querySelector(selector).addEventListener("change", () => {
-      loadCards(true);
+      if (!cardsAreLoading) {
+        loadCards(true);
+      }
     });
   });
 
@@ -355,8 +439,9 @@ function addCardListeners() {
   document
     .querySelector("#previous-card-page")
     .addEventListener("click", async () => {
-      if (currentPage > 1) {
+      if (!cardsAreLoading && currentPage > 1) {
         currentPage -= 1;
+
         await loadCards();
       }
     });
@@ -364,8 +449,9 @@ function addCardListeners() {
   document
     .querySelector("#next-card-page")
     .addEventListener("click", async () => {
-      if (currentPage < totalPages) {
+      if (!cardsAreLoading && currentPage < totalPages) {
         currentPage += 1;
+
         await loadCards();
       }
     });
@@ -391,9 +477,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   addCardListeners();
 
-  // Cards are the important content, so load them first.
   await loadCards(true);
 
-  // Filter catalogs load afterward to avoid a request burst.
-  await loadCardFilterOptions();
+  loadCardFilterOptions();
 });
